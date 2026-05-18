@@ -3,8 +3,8 @@ package failover
 import (
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/tunnel"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/tunnel"
 )
 
 type Mode struct {

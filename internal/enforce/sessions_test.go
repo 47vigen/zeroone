@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/monitor"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/monitor"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 func TestPlanSessionLimitsKicksOldestIPs(t *testing.T) {

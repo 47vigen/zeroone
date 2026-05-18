@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/links"
+	"github.com/amirrezakm/zeroone/internal/links"
 )
 
 // Format names the wire format requested by the client.

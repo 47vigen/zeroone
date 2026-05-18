@@ -23,8 +23,8 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/events"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/events"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 type Notifier struct {

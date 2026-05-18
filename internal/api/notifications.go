@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/notify"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/notify"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 func (s *Server) notificationsGet(w http.ResponseWriter, r *http.Request) {

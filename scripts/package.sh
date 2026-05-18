@@ -3,8 +3,8 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 VERSION=${VERSION:-$(git -C "$ROOT" rev-parse --short HEAD)}
-PKG_DIR="$ROOT/dist/package/xray-stack-zeroone-$VERSION"
-ARCHIVE="$ROOT/dist/xray-stack-zeroone-$VERSION.tar.gz"
+PKG_DIR="$ROOT/dist/package/zeroone-$VERSION"
+ARCHIVE="$ROOT/dist/zeroone-$VERSION.tar.gz"
 
 "$ROOT/scripts/build.sh"
 rm -rf "$PKG_DIR"
@@ -16,5 +16,5 @@ cp -a "$ROOT/web/app/dist/." "$PKG_DIR/ui/"
 install -m 0644 "$ROOT/config/stack.example.json" "$PKG_DIR/config/stack.example.json"
 install -m 0644 "$ROOT/deploy/DEPLOY.md" "$PKG_DIR/docs/DEPLOY.md"
 
-tar -C "$ROOT/dist/package" -czf "$ARCHIVE" "xray-stack-zeroone-$VERSION"
+tar -C "$ROOT/dist/package" -czf "$ARCHIVE" "zeroone-$VERSION"
 printf '%s\n' "$ARCHIVE"

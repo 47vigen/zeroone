@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/system"
+	"github.com/amirrezakm/zeroone/internal/system"
 )
 
 // SyncConfig is the slice of stack config the periodic syncer needs.

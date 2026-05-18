@@ -13,10 +13,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/monitor"
-	"github.com/sakhtar/xray-stack-zeroone/internal/sessions"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/system"
+	"github.com/amirrezakm/zeroone/internal/monitor"
+	"github.com/amirrezakm/zeroone/internal/sessions"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/system"
 )
 
 type SessionAction struct {

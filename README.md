@@ -1,68 +1,131 @@
-# xray-stack-zeroone 🔢
+# zeroone
 
-Go control plane, edge relay, and web panel for the ZeroOne Xray stack.
-The Python/Bash control plane was replaced by this Go service — see
-[`docs/migration-cutover.md`](docs/migration-cutover.md).
+> A Go-based control panel for [Xray-core](https://github.com/XTLS/Xray-core),
+> with subscription links, traffic analytics, and a one-line installer.
 
-## Layout
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
-- `cmd/xray-stackd/` — Go control plane daemon. Renders Xray config, runs the
-  admin API, supervises failover/VPN/relay, and serves the web panel.
-- `cmd/edge-relay/` — small reverse proxy fronted by a managed PaaS
-  (runflare, liara, …) so an Xray inbound can be exposed on a TLS-only
-  platform. See [`docs/runflare-edge-deploy.md`](docs/runflare-edge-deploy.md).
-- `internal/` — control-plane packages: `stack` (config), `xray` (config
+`zeroone` is a single-host Xray control plane:
+
+- **Go daemon** that renders Xray config, supervises the `xray` process, and
+  exposes a REST API.
+- **React panel** for user management, subscription links, routing rules,
+  traffic analytics, and snapshots.
+- **Docker-first** deployment — `network_mode: host`, single volume,
+  one container.
+- **One-line installer** that drops a `zeroone` CLI at
+  `/usr/local/bin/zeroone` and gets the panel running in under 90 seconds.
+
+## Install
+
+On a clean Ubuntu / Debian / RHEL / Alma / Rocky / Alpine VPS:
+
+```bash
+sudo bash -c "$(curl -sSL https://raw.githubusercontent.com/amirrezakm/zeroone/main/scripts/install.sh)" @ install
+```
+
+The installer will:
+
+1. Install Docker if missing.
+2. Prompt for an admin username + password.
+3. Pull `ghcr.io/amirrezakm/zeroone:latest` and start the container.
+4. Print the panel URL.
+
+After install:
+
+```bash
+zeroone status        # service + healthcheck
+zeroone logs -f       # follow daemon logs
+zeroone update        # pull a newer image and restart
+zeroone cli admin list
+zeroone backup -o /root/zeroone-backup.tgz
+```
+
+See [`docs/INSTALL.md`](docs/INSTALL.md) for the full install guide and
+[`docs/CLI.md`](docs/CLI.md) for every subcommand.
+
+## Manual / Docker Compose install
+
+```bash
+mkdir -p /opt/zeroone /var/lib/zeroone
+curl -sSL https://raw.githubusercontent.com/amirrezakm/zeroone/main/docker/docker-compose.yml > /opt/zeroone/docker-compose.yml
+curl -sSL https://raw.githubusercontent.com/amirrezakm/zeroone/main/docker/.env.example       > /opt/zeroone/.env
+cd /opt/zeroone && docker compose up -d
+```
+
+## Host install (no Docker)
+
+For advanced operators who want OpenVPN failover, kernel-level bandwidth
+shaping (`nft` / `tc`), or systemd-managed tunnels, see
+[`docs/HOST-INSTALL.md`](docs/HOST-INSTALL.md).
+
+## Features
+
+- VLESS over WebSocket and XHTTP (works behind PaaS CDNs that reject raw
+  WebSocket upgrades).
+- Per-user UUIDs, quotas, daily reset windows, enable/disable.
+- Subscription links at `/sub/{token}`, user portal at `/me/{token}`.
+- Live traffic counters scraped from Xray's stats API.
+- Routing rules: direct domains, blocked IPs/domains, AI-domain routing.
+- Audit log + JSON snapshots of every config change.
+- Multiple admin accounts with PBKDF2 password hashes.
+- Healthcheck endpoint, `slog`-structured logs, OCI image labels.
+
+## Repository layout
+
+- `cmd/xray-stackd/` — control plane daemon.
+- `cmd/edge-relay/` — small reverse proxy for PaaS edges. See
+  [`docs/runflare-edge-deploy.md`](docs/runflare-edge-deploy.md).
+- `internal/` — 24 Go packages: `stack` (config), `xray` (config
   generation), `api` (HTTP), `auth`, `failover`, `relay`, `tunnel`,
   `bandwidth`, `enforce`, `usage`, `monitor`, `metrics`, `analytics`,
   `audit`, `events`, `notify`, `presence`, `sessions`, `snapshots`,
   `stats`, `subscription`, `firewall`, `links`, `system`.
-- `web/app/` — React/Vite panel. Built into `web/app/dist/` and served by
-  `xray-stackd` at `/`.
-- `config/stack.example.json` — sanitized example config; copy to
-  `config/stack.local.json` for local dev (gitignored).
-- `config/examples/config.example.json` — sanitized example Xray config.
-- `deploy/systemd/xray-stackd.service` — production unit file.
-- `deploy/DEPLOY.md` — production install / upgrade notes.
-- `rootfs/` — reduced server snapshot (nginx defaults, fallback site under
-  `var/www/html`). Live xray configs, OpenVPN creds, and other sensitive
-  files live here on disk for local reference but are gitignored.
-- `scripts/` — `build.sh`, `check.sh`, `package.sh`,
-  `install-local-layout.sh`, `sync-from-server.sh`, `import-live-stack.py`.
+- `web/app/` — React/Vite panel.
+- `docker/` — Dockerfile, compose file, env example.
+- `scripts/` — `install.sh` (the one-line installer + CLI wrapper),
+  `build.sh`, `check.sh`, `package.sh`.
 
-## Quick start
+## Development
 
 ```bash
-# Run tests + build a sample xray config
+# Run tests + render a sample xray config
 scripts/check.sh
 
 # Build the production binary + panel into dist/
 scripts/build.sh
 
-# Package a release tarball for the server
-scripts/package.sh
+# Run the daemon locally
+go run ./cmd/xray-stackd -config config/stack.example.json
 ```
 
-Run the daemon locally against a local config:
+Flags: `-print-xray` (render generated Xray config and exit),
+`-allow-apply` (mutate live Xray/systemd state), `-manage-failover`,
+`-manage-vpn`, `-manage-relay`, `-manage-xray` (run Xray as a child
+process instead of via systemd).
 
-```bash
-go run ./cmd/xray-stackd -config config/stack.local.json
-```
+## Documentation
 
-Useful flags: `-print-xray` (render the generated Xray config and exit),
-`-allow-apply` (let endpoints mutate live Xray/systemd state),
-`-manage-failover`, `-manage-vpn`, `-manage-relay`.
+- [`docs/INSTALL.md`](docs/INSTALL.md) — installer + manual install.
+- [`docs/CLI.md`](docs/CLI.md) — `zeroone` subcommands.
+- [`docs/CONFIG.md`](docs/CONFIG.md) — annotated `stack.json` reference.
+- [`docs/UPGRADE.md`](docs/UPGRADE.md) — upgrade flow.
+- [`docs/SECURITY.md`](docs/SECURITY.md) — TLS, reverse proxy, port hardening.
+- [`docs/HOST-INSTALL.md`](docs/HOST-INSTALL.md) — systemd install with
+  OpenVPN / failover / bandwidth shaping.
+- [`docs/runflare-edge-deploy.md`](docs/runflare-edge-deploy.md) — edge
+  relay deployment on PaaS providers.
 
-## Sync from the live server
+## Contributing
 
-`scripts/sync-from-server.sh` rsyncs the live `/etc` and `/usr/local`
-config into `rootfs/`. Run only when you intend to refresh the snapshot —
-it overwrites local edits in `rootfs/`. Never rsync the result blindly
-back into another machine.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). All changes go through pull
+requests against `main`.
 
-## Security notes
+## Security
 
-- Live secrets (Xray configs, OpenVPN auth/keys, htpasswd, subscription
-  user pages) sit under `rootfs/` for local reference and are all
-  gitignored. Check `.gitignore` before adding anything under `rootfs/`.
-- `config/stack.local.json` is gitignored; commit only
-  `config/stack.example.json` changes.
+Please report security issues privately — see [`SECURITY.md`](SECURITY.md).
+
+## License
+
+[AGPL-3.0-or-later](LICENSE). Fork-friendly, but networked deployments must
+make their modifications available under the same license.

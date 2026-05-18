@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 // Status is the latest observed runtime state of the relay plugin.

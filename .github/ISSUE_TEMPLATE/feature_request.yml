@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an enhancement.
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the pain point or use case. We prefer requests grounded in real need over speculative "wouldn't it be nice" ideas.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to see?
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Are there workarounds today, or related features that don't quite fit?

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/system"
+	"github.com/amirrezakm/zeroone/internal/system"
 )
 
 type KillResult struct {

@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/monitor"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stats"
-	"github.com/sakhtar/xray-stack-zeroone/internal/tunnel"
-	"github.com/sakhtar/xray-stack-zeroone/internal/usage"
+	"github.com/amirrezakm/zeroone/internal/monitor"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stats"
+	"github.com/amirrezakm/zeroone/internal/tunnel"
+	"github.com/amirrezakm/zeroone/internal/usage"
 )
 
 // Store holds two resolutions. Fine = 5s × 720 (1h). Coarse = 1m × 1440 (24h).

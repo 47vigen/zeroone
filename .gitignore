@@ -4,43 +4,24 @@ __pycache__/
 *.pyo
 *.swp
 
-# Runtime/state files
-rootfs/usr/local/etc/xray/user-usage.json
-rootfs/usr/local/etc/xray/socks-usage.json
-rootfs/usr/local/etc/xray/user-bans.json
-rootfs/usr/local/etc/xray/bandwidth-limits.json
+# Live host snapshot — never tracked in public repo.
+/rootfs/
 
-# Live secrets/configs. Keep local copies, do not commit by default.
-rootfs/usr/local/etc/xray/config*.json
-!config/examples/config.example.json
-rootfs/etc/openvpn/auth.txt
-rootfs/etc/openvpn/key-pass.txt
-rootfs/etc/openvpn/*.conf
-rootfs/etc/openvpn/*.conf.bak*
-rootfs/etc/nginx/.monitor.htpasswd
-rootfs/var/www/sub/amirreza
-rootfs/var/www/sub/parastoo
+# Local live source-of-truth generated from server snapshot
+config/stack.local.json
+
+# Environment / secrets
+/.env
+/.env.local
+/opt-zeroone-local/
 
 # Old backups from server
 *.bak
 *.bak-*
 *.tmp-*
 
-# Local-only binaries and live subscription secrets
-rootfs/usr/local/bin/xray
-rootfs/var/www/sub/sub.live.py
-
 # Full server config snapshots kept local-only until sanitized/reviewed
 server-snapshots/
-rootfs/etc/default/
-rootfs/etc/fail2ban/
-rootfs/etc/ssh/
-rootfs/etc/ufw/
-rootfs/etc/sysctl.d/
-rootfs/etc/security/
-
-# Local live source-of-truth generated from server snapshot
-config/stack.local.json
 
 # UI build/runtime artifacts
 web/app/node_modules/
@@ -48,10 +29,6 @@ web/app/dist/
 
 # Build output
 dist/
-rootfs/usr/local/bin/xray-stackd
-rootfs/usr/local/etc/xray-stack/
-rootfs/usr/local/share/xray-stack-ui/
-rootfs/etc/systemd/system/xray-stackd.service
 
 # Local-built binaries
 /edge-relay
@@ -59,5 +36,12 @@ rootfs/etc/systemd/system/xray-stackd.service
 /cmd/edge-relay/edge-relay
 /cmd/xray-stackd/xray-stackd
 
+# Test/coverage
+coverage.out
+*.pprof
+
 # Release archives
 *.tar.gz
+
+# Internal-only docs (not for public)
+docs/internal/

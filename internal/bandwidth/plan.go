@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 const (

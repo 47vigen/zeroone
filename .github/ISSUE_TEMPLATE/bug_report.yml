@@ -1,0 +1,62 @@
+name: Bug report
+description: Report a problem with zeroone.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill out
+        the sections below — the more detail, the faster we can help.
+        For security issues, **do not** file a public issue — see
+        [SECURITY.md](https://github.com/amirrezakm/zeroone/blob/main/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: zeroone version
+      description: Output of `zeroone version` (or `docker inspect ghcr.io/amirrezakm/zeroone:VERSION`).
+      placeholder: "v0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Install method
+      options:
+        - One-line installer (Docker)
+        - Manual docker compose
+        - Host install (systemd)
+        - Building from source
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Ubuntu 22.04, Debian 12, AlmaLinux 9, …"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you see instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps that trigger the bug.
+      placeholder: |
+        1. `zeroone install`
+        2. Add a user via the panel
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Output of `zeroone logs --tail 200` with secrets redacted.
+      render: shell

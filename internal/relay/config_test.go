@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 func TestDeploymentIDsParsesURLs(t *testing.T) {

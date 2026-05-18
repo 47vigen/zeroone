@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/system"
+	"github.com/amirrezakm/zeroone/internal/system"
 )
 
 const ruleComment = "xray-stack bandwidth-limited"

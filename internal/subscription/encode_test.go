@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/links"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/usage"
+	"github.com/amirrezakm/zeroone/internal/links"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/usage"
 )
 
 var sampleLinks = []links.Link{

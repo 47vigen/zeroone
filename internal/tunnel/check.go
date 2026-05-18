@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 type Check struct {
