@@ -5,12 +5,33 @@ GHCR, Docker Hub, or GitHub raw**, but who can SFTP into it from
 another host. It is the standard workflow for VPS hosts inside Iran
 behind upstream filtering.
 
-The flow is a strict three-step:
+## TL;DR — use the prebuilt bundle from Releases
+
+Every tagged release publishes a ready-to-use offline bundle for
+`amd64` and `arm64` as a GitHub Release asset. **You don't need to
+build it yourself.** Grab the file from
+[github.com/amirrezakm/zeroone/releases/latest](https://github.com/amirrezakm/zeroone/releases/latest)
+on any host with internet, then jump straight to
+[Step 2 — Transfer to the destination](#step-2--transfer-to-the-destination).
+
+Asset names:
+
+```
+zeroone-offline-vX.Y.Z-amd64.tar.gz          # the bundle
+zeroone-offline-vX.Y.Z-amd64.tar.gz.sha256   # checksum
+zeroone-offline-vX.Y.Z-arm64.tar.gz
+zeroone-offline-vX.Y.Z-arm64.tar.gz.sha256
+```
+
+The "build the bundle yourself" path (Step 1 below) is only needed if
+you want to bundle a fork, a custom registry source, or a build that
+isn't yet released.
+
+## Flow
 
 1. On a **builder host** (anywhere with internet, or with access to
-   `mirror-docker.runflare.com`), produce a single tarball containing
-   the Docker image, compose file, env example, and an offline
-   installer.
+   `mirror-docker.runflare.com`), grab the prebuilt bundle from the
+   Releases page — or produce one yourself.
 2. Transfer that tarball to the destination via **SFTP** (or `scp` /
    `rsync`).
 3. On the destination, **load** the image and start the container
@@ -53,7 +74,24 @@ The flow is a strict three-step:
   script to install it automatically via the Runflare apt mirror.
   Pre-install Docker yourself to skip this entirely.
 
-## Step 1 — Build the bundle on the builder host
+## Step 1 — Get the bundle on the builder host
+
+**Option A (recommended) — download from Releases:**
+
+```bash
+ARCH=amd64   # or arm64
+VERSION=v1.0.0
+curl -L -o zeroone-offline-${VERSION}-${ARCH}.tar.gz \
+  https://github.com/amirrezakm/zeroone/releases/download/${VERSION}/zeroone-offline-${VERSION}-${ARCH}.tar.gz
+curl -L -o zeroone-offline-${VERSION}-${ARCH}.tar.gz.sha256 \
+  https://github.com/amirrezakm/zeroone/releases/download/${VERSION}/zeroone-offline-${VERSION}-${ARCH}.tar.gz.sha256
+sha256sum -c zeroone-offline-${VERSION}-${ARCH}.tar.gz.sha256
+```
+
+Then skip to **Step 2**.
+
+**Option B — build it yourself** (for forks, unreleased builds, or a
+non-default registry source):
 
 ```bash
 cd zeroone
@@ -187,10 +225,10 @@ See the next section.
 
 Repeat the same three steps with a new version:
 
-1. On the builder, rebuild with the new version:
-   ```bash
-   ZEROONE_VERSION=v1.1.0 bash scripts/offline-bundle.sh
-   ```
+1. Download the new release's bundle from
+   [Releases](https://github.com/amirrezakm/zeroone/releases) (or
+   rebuild yourself with `ZEROONE_VERSION=v1.1.0 bash
+   scripts/offline-bundle.sh`).
 2. SFTP the new tarball to the destination.
 3. On the destination, extract and run the offline `update`
    subcommand against the new bundle directory:

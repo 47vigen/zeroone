@@ -43,7 +43,8 @@ zeroone backup -o /root/zeroone-backup.tgz
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for the full install guide and
 [`docs/CLI.md`](docs/CLI.md) for every subcommand. For air-gapped /
-Iranian deployments where the destination cannot reach GHCR, see
+Iranian deployments where the destination cannot reach GHCR,
+prebuilt offline bundles ship with every release — see
 [`docs/OFFLINE-INSTALL.md`](docs/OFFLINE-INSTALL.md).
 
 ## Manual / Docker Compose install

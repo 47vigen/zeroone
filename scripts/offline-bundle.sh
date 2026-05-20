@@ -142,6 +142,10 @@ tar -czf "${BUNDLE_PATH}" -C "${STAGE_DIR}" .
 BUNDLE_SHA=$(sha256_of "${BUNDLE_PATH}")
 BUNDLE_SIZE=$(du -h "${BUNDLE_PATH}" | awk '{print $1}')
 
+# Sidecar checksum file, matching the convention used by the daemon
+# tarballs in .github/workflows/release.yml.
+printf '%s  %s\n' "${BUNDLE_SHA}" "${BUNDLE_NAME}" > "${BUNDLE_PATH}.sha256"
+
 rm -rf "${STAGE_DIR}"
 
 ok "bundle ready"
