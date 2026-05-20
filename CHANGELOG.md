@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1 — 2026-05-20
+
+### Bug Fixes
+
+- pin builder stages to $BUILDPLATFORM to avoid QEMU stalls (132e32e)
+
 ## v0.2.0 — 2026-05-20
 
 ### Features
