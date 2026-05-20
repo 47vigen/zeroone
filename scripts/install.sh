@@ -237,7 +237,15 @@ cmd_install() {
     prompt_admin
 
     log "self-installing CLI to ${CLI_PATH}"
-    install -m 0755 "$0" "${CLI_PATH}"
+    # When invoked via `bash -c "$(curl ...)" @ install`, $0 is "@", not a
+    # path on disk — installing from $0 would fail. Detect that and
+    # re-fetch the script to its final location instead.
+    if [ -f "$0" ] && [ -r "$0" ]; then
+        install -m 0755 "$0" "${CLI_PATH}"
+    else
+        fetch "${REPO_RAW}/scripts/install.sh" "${CLI_PATH}"
+        chmod 0755 "${CLI_PATH}"
+    fi
 
     log "pulling image ${IMAGE_DEFAULT}"
     dc pull
