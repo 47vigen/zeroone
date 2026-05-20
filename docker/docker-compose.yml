@@ -14,7 +14,7 @@
 
 services:
   zeroone:
-    image: ghcr.io/amirrezakm/zeroone:${ZEROONE_VERSION:-latest}
+    image: ${ZEROONE_IMAGE:-ghcr.io/amirrezakm/zeroone}:${ZEROONE_VERSION:-latest}
     container_name: zeroone
     restart: always
     network_mode: host

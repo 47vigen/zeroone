@@ -43,6 +43,22 @@ ZEROONE_ADMIN_PASSWORD='change-me' \
 sudo -E bash -c "$(curl -sSL https://raw.githubusercontent.com/amirrezakm/zeroone/main/scripts/install.sh)" @ install
 ```
 
+## Installing from a fork
+
+If you maintain a fork that publishes its own image to GHCR, point the
+installer at it with `ZEROONE_REPO`. It overrides both the raw URL the
+script fetches files from and the image the container pulls — and the
+installer pins `ZEROONE_IMAGE` in `/opt/zeroone/.env` so subsequent
+`zeroone update` calls keep using your registry.
+
+```bash
+ZEROONE_REPO=your-fork/zeroone \
+sudo -E bash -c "$(curl -sSL https://raw.githubusercontent.com/your-fork/zeroone/main/scripts/install.sh)" @ install
+```
+
+For finer-grained control, use `ZEROONE_REPO_RAW` and/or `ZEROONE_IMAGE`
+individually.
+
 ## What gets created
 
 | Path | Purpose |

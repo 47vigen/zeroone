@@ -14,8 +14,16 @@ set -Eeuo pipefail
 INSTALL_DIR=${ZEROONE_INSTALL_DIR:-/opt/zeroone}
 DATA_DIR=${ZEROONE_DATA_DIR:-/var/lib/zeroone}
 CLI_PATH=${ZEROONE_CLI_PATH:-/usr/local/bin/zeroone}
-REPO_RAW=${ZEROONE_REPO_RAW:-https://raw.githubusercontent.com/amirrezakm/zeroone/${ZEROONE_REF:-main}}
-IMAGE_DEFAULT=ghcr.io/amirrezakm/zeroone:${ZEROONE_VERSION:-latest}
+
+# Upstream repo + image. Override either:
+#   ZEROONE_REPO=owner/name   (drives both raw URL and GHCR image)
+#   ZEROONE_REPO_RAW=...      (raw URL only — wins over ZEROONE_REPO)
+#   ZEROONE_IMAGE=...         (image base only — wins over ZEROONE_REPO)
+# Fork users: export ZEROONE_REPO=<your-fork>/zeroone before running.
+ZEROONE_REPO=${ZEROONE_REPO:-amirrezakm/zeroone}
+REPO_RAW=${ZEROONE_REPO_RAW:-https://raw.githubusercontent.com/${ZEROONE_REPO}/${ZEROONE_REF:-main}}
+IMAGE_BASE=${ZEROONE_IMAGE:-ghcr.io/${ZEROONE_REPO}}
+IMAGE_DEFAULT=${IMAGE_BASE}:${ZEROONE_VERSION:-latest}
 
 COMPOSE_FILE="${INSTALL_DIR}/docker-compose.yml"
 ENV_FILE="${INSTALL_DIR}/.env"
@@ -211,6 +219,18 @@ cmd_install() {
     fetch "${REPO_RAW}/docker/docker-compose.yml" "${COMPOSE_FILE}"
     fetch "${REPO_RAW}/docker/.env.example"       "${ENV_FILE}"
 
+    # If the user is installing from a fork (ZEROONE_REPO / ZEROONE_IMAGE),
+    # pin the resolved image in .env so `docker compose pull` and future
+    # `zeroone update` calls hit the right registry without re-exporting.
+    if [ -n "${ZEROONE_IMAGE:-}" ] || [ "${ZEROONE_REPO}" != "amirrezakm/zeroone" ]; then
+        if grep -qE '^ZEROONE_IMAGE=' "${ENV_FILE}" 2>/dev/null; then
+            sed -i "s|^ZEROONE_IMAGE=.*|ZEROONE_IMAGE=${IMAGE_BASE}|" "${ENV_FILE}"
+        else
+            printf '\n# Overridden by installer (fork build).\nZEROONE_IMAGE=%s\n' "${IMAGE_BASE}" >> "${ENV_FILE}"
+        fi
+        log "pinned ZEROONE_IMAGE=${IMAGE_BASE} in ${ENV_FILE}"
+    fi
+
     # stack.json gets auto-created by the daemon (ZEROONE_AUTO_INIT=1)
     # on first start.
 
@@ -380,9 +400,10 @@ cmd_restore() {
 cmd_version() {
     printf 'zeroone CLI version: %s\n' "${SCRIPT_VERSION}"
     if [ -f "${ENV_FILE}" ]; then
-        local v
+        local v img
         v=$(grep -E '^ZEROONE_VERSION=' "${ENV_FILE}" | tail -1 | cut -d= -f2 || true)
-        printf 'image:               ghcr.io/amirrezakm/zeroone:%s\n' "${v:-latest}"
+        img=$(grep -E '^ZEROONE_IMAGE=' "${ENV_FILE}" | tail -1 | cut -d= -f2 || true)
+        printf 'image:               %s:%s\n' "${img:-${IMAGE_BASE}}" "${v:-latest}"
     fi
     docker exec zeroone xray-stackd --help 2>&1 | head -1 || true
 }
@@ -417,6 +438,11 @@ environment overrides (rarely needed):
   ZEROONE_DATA_DIR     (default /var/lib/zeroone)
   ZEROONE_REF          (default main)
   ZEROONE_VERSION      (default latest)
+  ZEROONE_REPO         (default amirrezakm/zeroone — set to <fork>/zeroone
+                        when installing from a fork; derives both raw URL
+                        and GHCR image)
+  ZEROONE_REPO_RAW     (advanced: override raw URL only)
+  ZEROONE_IMAGE        (advanced: override image base only)
   ZEROONE_ADMIN_USERNAME / ZEROONE_ADMIN_PASSWORD  (skip interactive prompt)
 EOF
 }
