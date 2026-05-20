@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { ReactNode } from "react";
+import { ResponsiveContainer, AreaChart, Area } from "recharts";
 
 type Series = { t: number; v: number }[];
 
@@ -8,25 +8,32 @@ export default function KPICard({
   value,
   hint,
   series,
-  tone = 'default',
+  tone = "default",
   icon,
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
   series?: Series;
-  tone?: 'default' | 'ok' | 'warn' | 'bad';
+  tone?: "default" | "ok" | "warn" | "bad";
   icon?: ReactNode;
 }) {
-  const stroke = tone === 'ok' ? '#0a8050' : tone === 'warn' ? '#b45309' : tone === 'bad' ? '#b91c1c' : '#f38020';
+  const stroke =
+    tone === "ok"
+      ? "#0a8050"
+      : tone === "warn"
+        ? "#b45309"
+        : tone === "bad"
+          ? "#b91c1c"
+          : "#f38020";
   return (
     <div className="panel panel-pad relative overflow-hidden">
       <div className="flex items-start justify-between gap-2">
         <div className="kpi-label">{label}</div>
         {icon && <div className="text-muted dark:text-muted-dark">{icon}</div>}
       </div>
-      <div className="mt-1 kpi-value">{value}</div>
-      {hint && <div className="mt-1 kpi-foot">{hint}</div>}
+      <div className="kpi-value mt-1">{value}</div>
+      {hint && <div className="kpi-foot mt-1">{hint}</div>}
       {series && series.length > 1 && (
         <div className="-mx-5 -mb-5 mt-3 h-12">
           <ResponsiveContainer width="100%" height="100%">
@@ -37,7 +44,13 @@ export default function KPICard({
                   <stop offset="100%" stopColor={stroke} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <Area dataKey="v" stroke={stroke} strokeWidth={1.5} fill={`url(#grad-${label})`} isAnimationActive={false} />
+              <Area
+                dataKey="v"
+                stroke={stroke}
+                strokeWidth={1.5}
+                fill={`url(#grad-${label})`}
+                isAnimationActive={false}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>

@@ -1,38 +1,62 @@
-import { useEffect, useRef, useState } from 'react';
-import { Pause, Play, Search, ScrollText, ShieldAlert } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import { useAudit, useXrayLogs } from '../api/hooks';
-import { formatTime } from '../lib/format';
+import { useEffect, useRef, useState } from "react";
+import { Pause, Play, Search, ScrollText, ShieldAlert } from "lucide-react";
+import PageHeader from "../components/PageHeader";
+import { useAudit, useXrayLogs } from "../api/hooks";
+import { formatTime } from "../lib/format";
 
-type Tab = 'audit' | 'xray';
+type Tab = "audit" | "xray";
 
 export default function Logs() {
-  const [tab, setTab] = useState<Tab>('xray');
+  const [tab, setTab] = useState<Tab>("xray");
   return (
     <>
       <PageHeader title="Logs" subtitle="Live Xray journal and panel audit log." />
       <div className="panel">
-        <div className="border-b border-border dark:border-border-dark px-3 py-2 flex gap-1">
-          <TabButton active={tab === 'xray'} onClick={() => setTab('xray')} icon={<ScrollText size={14} />}>Live xray</TabButton>
-          <TabButton active={tab === 'audit'} onClick={() => setTab('audit')} icon={<ShieldAlert size={14} />}>Audit</TabButton>
+        <div className="flex gap-1 border-b border-border px-3 py-2 dark:border-border-dark">
+          <TabButton
+            active={tab === "xray"}
+            onClick={() => setTab("xray")}
+            icon={<ScrollText size={14} />}
+          >
+            Live xray
+          </TabButton>
+          <TabButton
+            active={tab === "audit"}
+            onClick={() => setTab("audit")}
+            icon={<ShieldAlert size={14} />}
+          >
+            Audit
+          </TabButton>
         </div>
-        {tab === 'xray' ? <XrayLogsTab /> : <AuditTab />}
+        {tab === "xray" ? <XrayLogsTab /> : <AuditTab />}
       </div>
     </>
   );
 }
 
-function TabButton({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
+function TabButton({
+  active,
+  onClick,
+  icon,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <button
-      className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 ${active ? 'bg-bg dark:bg-bg-dark' : 'text-muted dark:text-muted-dark'}`}
+      className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${active ? "bg-bg dark:bg-bg-dark" : "text-muted dark:text-muted-dark"}`}
       onClick={onClick}
-    >{icon} {children}</button>
+    >
+      {icon} {children}
+    </button>
   );
 }
 
 function XrayLogsTab() {
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState("");
   const [paused, setPaused] = useState(false);
   const { data } = useXrayLogs(500, !paused);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,42 +74,60 @@ function XrayLogsTab() {
     if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
   }, [data]);
 
-  const lines = (data?.lines ?? []).filter((l) => !filter || l.toLowerCase().includes(filter.toLowerCase()));
+  const lines = (data?.lines ?? []).filter(
+    (l) => !filter || l.toLowerCase().includes(filter.toLowerCase()),
+  );
 
   return (
     <>
-      <div className="px-4 py-2 border-b border-border dark:border-border-dark flex items-center gap-2 text-xs">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs dark:border-border-dark">
         <Search size={12} className="text-muted" />
         <input
-          className="input bg-transparent border-0 px-0 focus:ring-0 flex-1"
+          className="input flex-1 border-0 bg-transparent px-0 focus:ring-0"
           placeholder="filter… (e.g. amirreza, apple, blocked)"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
-        <span className="text-muted dark:text-muted-dark">{lines.length} / {data?.lines.length ?? 0} lines</span>
+        <span className="text-muted dark:text-muted-dark">
+          {lines.length} / {data?.lines.length ?? 0} lines
+        </span>
         <button className="btn text-xs" onClick={() => setPaused((p) => !p)}>
-          {paused ? <><Play size={12} /> Resume</> : <><Pause size={12} /> Pause</>}
+          {paused ? (
+            <>
+              <Play size={12} /> Resume
+            </>
+          ) : (
+            <>
+              <Pause size={12} /> Pause
+            </>
+          )}
         </button>
       </div>
       <div
         ref={containerRef}
         onScroll={onScroll}
-        className="font-mono text-[11px] leading-relaxed px-4 py-3 max-h-[60vh] overflow-auto whitespace-pre"
+        className="max-h-[60vh] overflow-auto whitespace-pre px-4 py-3 font-mono text-[11px] leading-relaxed"
       >
         {lines.map((l, i) => (
-          <div key={i} className={lineToneClass(l)}>{l}</div>
+          <div key={i} className={lineToneClass(l)}>
+            {l}
+          </div>
         ))}
-        {lines.length === 0 && <div className="text-muted dark:text-muted-dark py-6 text-center font-sans">No matching log lines.</div>}
+        {lines.length === 0 && (
+          <div className="py-6 text-center font-sans text-muted dark:text-muted-dark">
+            No matching log lines.
+          </div>
+        )}
       </div>
     </>
   );
 }
 
 function lineToneClass(line: string): string {
-  if (/error|failed|reject/i.test(line)) return 'text-bad dark:text-bad-dark';
-  if (/warning|degraded/i.test(line)) return 'text-warn dark:text-warn-dark';
-  if (/blocked|>> block/.test(line)) return 'text-muted dark:text-muted-dark';
-  return '';
+  if (/error|failed|reject/i.test(line)) return "text-bad dark:text-bad-dark";
+  if (/warning|degraded/i.test(line)) return "text-warn dark:text-warn-dark";
+  if (/blocked|>> block/.test(line)) return "text-muted dark:text-muted-dark";
+  return "";
 }
 
 function AuditTab() {
@@ -99,20 +141,28 @@ function AuditTab() {
         <div>Actor</div>
         <div>Detail</div>
       </div>
-      <div className="divide-y divide-border dark:divide-border-dark max-h-[60vh] overflow-auto">
+      <div className="max-h-[60vh] divide-y divide-border overflow-auto dark:divide-border-dark">
         {entries.length === 0 && (
           <div className="px-4 py-6 text-sm text-muted dark:text-muted-dark">No entries yet.</div>
         )}
         {entries.map((e, i) => (
-          <div key={i} className="grid grid-cols-[140px,1fr,160px,1fr] px-4 py-2 text-sm items-start gap-2">
-            <div className="text-xs text-muted dark:text-muted-dark whitespace-nowrap font-mono">{formatTime(e.t)}</div>
+          <div
+            key={i}
+            className="grid grid-cols-[140px,1fr,160px,1fr] items-start gap-2 px-4 py-2 text-sm"
+          >
+            <div className="whitespace-nowrap font-mono text-xs text-muted dark:text-muted-dark">
+              {formatTime(e.t)}
+            </div>
             <div>
-              <span className="pill text-muted"><span className="dot" />{e.action}</span>
+              <span className="pill text-muted">
+                <span className="dot" />
+                {e.action}
+              </span>
               {e.target && <span className="ml-2 font-mono text-xs">{e.target}</span>}
             </div>
             <div className="text-xs">{e.actor}</div>
-            <div className="text-xs text-muted dark:text-muted-dark font-mono break-all">
-              {e.data ? JSON.stringify(e.data) : ''}
+            <div className="break-all font-mono text-xs text-muted dark:text-muted-dark">
+              {e.data ? JSON.stringify(e.data) : ""}
             </div>
           </div>
         ))}

@@ -1,5 +1,5 @@
 export async function copyText(value: string): Promise<boolean> {
-  if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
+  if (typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext) {
     try {
       await navigator.clipboard.writeText(value);
       return true;
@@ -8,17 +8,17 @@ export async function copyText(value: string): Promise<boolean> {
     }
   }
   try {
-    const ta = document.createElement('textarea');
+    const ta = document.createElement("textarea");
     ta.value = value;
-    ta.setAttribute('readonly', '');
-    ta.style.position = 'fixed';
-    ta.style.top = '0';
-    ta.style.left = '0';
-    ta.style.opacity = '0';
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "0";
+    ta.style.left = "0";
+    ta.style.opacity = "0";
     document.body.appendChild(ta);
     ta.focus();
     ta.select();
-    const ok = document.execCommand('copy');
+    const ok = document.execCommand("copy");
     document.body.removeChild(ta);
     return ok;
   } catch {

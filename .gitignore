@@ -26,6 +26,8 @@ server-snapshots/
 # UI build/runtime artifacts
 web/app/node_modules/
 web/app/dist/
+web/app/tsconfig.tsbuildinfo
+web/app/.vite/
 
 # Build output
 dist/
