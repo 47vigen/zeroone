@@ -12,15 +12,24 @@
 ARG XRAY_VERSION=v25.1.30
 
 # ---------- 1. UI build ----------
-FROM node:20-alpine AS ui
+# Arch-independent JS — always build natively to avoid QEMU emulation
+# (npm install + vite build under arm64 QEMU on an amd64 runner takes
+# tens of minutes and routinely makes the release job look hung).
+FROM --platform=$BUILDPLATFORM node:20-alpine AS ui
 WORKDIR /src/web/app
 COPY web/app/package.json web/app/package-lock.json* ./
-RUN npm install --no-audit --no-fund
+RUN if [ -f package-lock.json ]; then \
+        npm ci --no-audit --no-fund; \
+    else \
+        npm install --no-audit --no-fund; \
+    fi
 COPY web/app/ ./
 RUN npm run build
 
 # ---------- 2. Go daemon ----------
-FROM golang:1.25-alpine AS daemon
+# Build on $BUILDPLATFORM and cross-compile to $TARGETARCH; Go's
+# cross-compiler is native, so this stays fast for both amd64 and arm64.
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS daemon
 RUN apk add --no-cache ca-certificates
 WORKDIR /src
 COPY go.mod go.sum ./
@@ -29,7 +38,7 @@ COPY cmd ./cmd
 COPY internal ./internal
 COPY config ./config
 ARG VERSION=dev
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 ENV CGO_ENABLED=0 GOOS=linux
 RUN GOARCH=${TARGETARCH} go build \
         -mod=vendor -trimpath \
@@ -37,9 +46,11 @@ RUN GOARCH=${TARGETARCH} go build \
         -o /out/xray-stackd ./cmd/xray-stackd
 
 # ---------- 3. Xray binary ----------
-FROM alpine:3.20 AS xray
+# Just curls a prebuilt binary keyed off TARGETARCH — no need to emulate
+# the target architecture for that.
+FROM --platform=$BUILDPLATFORM alpine:3.20 AS xray
 ARG XRAY_VERSION
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 RUN apk add --no-cache curl unzip ca-certificates && \
     case "${TARGETARCH}" in \
       amd64) X="Xray-linux-64.zip" ;; \
