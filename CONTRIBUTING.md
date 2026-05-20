@@ -27,9 +27,25 @@ and builds the panel if `web/app/node_modules` exists.
 - Branch off `main`. Feature branches: `feat/<short-name>`, fixes:
   `fix/<short-name>`.
 - Keep commits focused. Squash noise before requesting review.
-- Conventional-Commits-style prefixes are welcome but not required.
 - Open a pull request against `main`; CI (Go tests, UI build, shellcheck,
-  Docker build smoke) must pass before merge.
+  Docker build smoke, CodeQL, govulncheck, Trivy) must pass before merge.
+
+### PR titles must follow Conventional Commits
+
+Releases are cut automatically on merge to `main` based on the squash
+commit subject. Use one of these prefixes in your **PR title**:
+
+| Prefix         | Effect on version              | Example                                  |
+|----------------|--------------------------------|------------------------------------------|
+| `feat:`        | minor bump (e.g. 0.1 → 0.2)    | `feat: add OpenVPN failover`             |
+| `fix:`         | patch bump (e.g. 0.1.0 → 0.1.1)| `fix(api): reject empty admin password`  |
+| `perf:`        | patch bump                     | `perf(stats): batch presence flushes`    |
+| `<type>!:`     | major bump (breaking change)   | `feat!: drop legacy /var/lib/xray-stack` |
+| `docs:` / `chore:` / `ci:` / `refactor:` / `test:` / `build:` / `style:` | no release | `docs: clarify install flow` |
+
+A `BREAKING CHANGE:` footer in the commit body also forces a major bump.
+PRs whose titles don't match any of the above merge cleanly but produce
+no release — useful for docs-only or CI-only changes.
 
 ## Vendoring
 
