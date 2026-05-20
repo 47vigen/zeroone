@@ -32,8 +32,21 @@ jobs:
       - name: go test
         run: go test -race -count=1 ./...
 
+  golangci-lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache: true
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: v2.12.2
+
   ui:
-    name: UI build
+    name: UI (build + lint + format)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +63,12 @@ jobs:
           else
             npm install --no-audit --no-fund
           fi
+      - name: prettier --check
+        working-directory: web/app
+        run: npm run format:check
+      - name: eslint
+        working-directory: web/app
+        run: npm run lint
       - name: build
         working-directory: web/app
         run: npm run build

@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -266,9 +265,4 @@ func countEstablished(ctx context.Context, port int) int {
 		}
 	}
 	return count
-}
-
-func atoi(s string) int {
-	n, _ := strconv.Atoi(s)
-	return n
 }

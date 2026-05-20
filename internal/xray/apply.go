@@ -57,7 +57,7 @@ func (m Manager) Validate(ctx context.Context, cfg stack.Config, rendered []byte
 	if err != nil {
 		return err
 	}
-	defer os.Remove(tmp.Name())
+	defer func() { _ = os.Remove(tmp.Name()) }()
 	if _, err := tmp.Write(rendered); err != nil {
 		_ = tmp.Close()
 		return err

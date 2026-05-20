@@ -80,14 +80,14 @@ func NFTScript(limits []Limit) string {
 func TCCommands(device string, limits []Limit) []string {
 	if len(limits) == 0 {
 		return []string{
-			fmt.Sprintf("nft delete table inet xray_bw"),
+			"nft delete table inet xray_bw",
 			fmt.Sprintf("tc qdisc del dev %s root", device),
 			fmt.Sprintf("tc qdisc del dev %s clsact", device),
 			fmt.Sprintf("tc qdisc replace dev %s root fq", device),
 		}
 	}
 	commands := []string{
-		fmt.Sprintf("nft -f <generated xray_bw script>"),
+		"nft -f <generated xray_bw script>",
 		fmt.Sprintf("tc qdisc del dev %s root", device),
 		fmt.Sprintf("tc qdisc del dev %s clsact", device),
 		fmt.Sprintf("tc qdisc add dev %s root handle 1: htb default 999", device),

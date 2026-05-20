@@ -846,7 +846,7 @@ func clientEndpointURL(ep stack.ClientEndpoint, path string) string {
 		scheme = "https"
 	}
 	host := ep.Host
-	if ep.Port != 0 && !((scheme == "https" && ep.Port == 443) || (scheme == "http" && ep.Port == 80)) {
+	if ep.Port != 0 && (scheme != "https" || ep.Port != 443) && (scheme != "http" || ep.Port != 80) {
 		host = fmt.Sprintf("%s:%d", host, ep.Port)
 	}
 	if path == "" || path[0] != '/' {

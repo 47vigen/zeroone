@@ -72,7 +72,7 @@ func connectThroughProxy(ctx context.Context, proxyAddr, target string, timeout 
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	deadline, _ := dctx.Deadline()
 	_ = conn.SetDeadline(deadline)
 	req := fmt.Sprintf("CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", target, target)
