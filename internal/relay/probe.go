@@ -10,18 +10,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 // ProbeResult captures one health probe.
 type ProbeResult struct {
-	OK         bool   `json:"ok"`
-	ListenOK   bool   `json:"listen_ok"`
-	HealthOK   bool   `json:"health_ok"`
-	LatencyMS  int64  `json:"latency_ms,omitempty"`
-	Status     string `json:"status,omitempty"`
-	Error      string `json:"error,omitempty"`
-	Target     string `json:"target,omitempty"`
+	OK        bool   `json:"ok"`
+	ListenOK  bool   `json:"listen_ok"`
+	HealthOK  bool   `json:"health_ok"`
+	LatencyMS int64  `json:"latency_ms,omitempty"`
+	Status    string `json:"status,omitempty"`
+	Error     string `json:"error,omitempty"`
+	Target    string `json:"target,omitempty"`
 }
 
 // Probe runs a TCP check on the listen port plus an HTTP CONNECT through
@@ -72,7 +72,7 @@ func connectThroughProxy(ctx context.Context, proxyAddr, target string, timeout 
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	deadline, _ := dctx.Deadline()
 	_ = conn.SetDeadline(deadline)
 	req := fmt.Sprintf("CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", target, target)

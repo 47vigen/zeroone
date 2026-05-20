@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/relay"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/relay"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 // relayView is the panel-facing config representation. AuthKey is redacted

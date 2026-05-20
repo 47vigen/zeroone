@@ -116,13 +116,13 @@ func loadConfig() (config, error) {
 			}
 			label, rest, ok := strings.Cut(spec, ":")
 			if !ok {
-				return config{}, fmt.Errorf("EDGE_EXTRA_ROUTES entry %q missing label:", spec)
+				return config{}, fmt.Errorf("EDGE_EXTRA_ROUTES entry %q missing label", spec)
 			}
 			pathPart, targetPart, ok := strings.Cut(rest, "=")
 			if !ok {
 				return config{}, fmt.Errorf("EDGE_EXTRA_ROUTES entry %q missing =", spec)
 			}
-			target, hostOverride := pathPart, ""
+			var target, hostOverride string
 			if t, h, ok := strings.Cut(targetPart, ",Host="); ok {
 				target, hostOverride = t, h
 			} else {

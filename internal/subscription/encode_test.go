@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/links"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/usage"
+	"github.com/amirrezakm/zeroone/internal/links"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/usage"
 )
 
 var sampleLinks = []links.Link{
@@ -150,8 +150,10 @@ func TestHandleSubscriptionTokenAuth(t *testing.T) {
 	cfg.Xray.Inbounds.VLESSWSPort = 443
 
 	d := Deps{
-		Config:        func() stack.Config { return cfg },
-		LoadUsage:     func() (usage.UserState, error) { return usage.UserState{Totals: map[string]usage.Pair{"alice": {Uplink: 10, Downlink: 30}}}, nil },
+		Config: func() stack.Config { return cfg },
+		LoadUsage: func() (usage.UserState, error) {
+			return usage.UserState{Totals: map[string]usage.Pair{"alice": {Uplink: 10, Downlink: 30}}}, nil
+		},
 		PortalBaseURL: func(*http.Request) string { return "https://test.example" },
 	}
 

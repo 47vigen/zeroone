@@ -12,26 +12,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/analytics"
-	"github.com/sakhtar/xray-stack-zeroone/internal/audit"
-	"github.com/sakhtar/xray-stack-zeroone/internal/auth"
-	"github.com/sakhtar/xray-stack-zeroone/internal/bandwidth"
-	"github.com/sakhtar/xray-stack-zeroone/internal/enforce"
-	"github.com/sakhtar/xray-stack-zeroone/internal/events"
-	"github.com/sakhtar/xray-stack-zeroone/internal/failover"
-	"github.com/sakhtar/xray-stack-zeroone/internal/firewall"
-	"github.com/sakhtar/xray-stack-zeroone/internal/links"
-	"github.com/sakhtar/xray-stack-zeroone/internal/metrics"
-	"github.com/sakhtar/xray-stack-zeroone/internal/monitor"
-	"github.com/sakhtar/xray-stack-zeroone/internal/presence"
-	"github.com/sakhtar/xray-stack-zeroone/internal/relay"
-	"github.com/sakhtar/xray-stack-zeroone/internal/sessions"
-	"github.com/sakhtar/xray-stack-zeroone/internal/snapshots"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/subscription"
-	"github.com/sakhtar/xray-stack-zeroone/internal/tunnel"
-	"github.com/sakhtar/xray-stack-zeroone/internal/usage"
-	"github.com/sakhtar/xray-stack-zeroone/internal/xray"
+	"github.com/amirrezakm/zeroone/internal/analytics"
+	"github.com/amirrezakm/zeroone/internal/audit"
+	"github.com/amirrezakm/zeroone/internal/auth"
+	"github.com/amirrezakm/zeroone/internal/bandwidth"
+	"github.com/amirrezakm/zeroone/internal/enforce"
+	"github.com/amirrezakm/zeroone/internal/events"
+	"github.com/amirrezakm/zeroone/internal/failover"
+	"github.com/amirrezakm/zeroone/internal/firewall"
+	"github.com/amirrezakm/zeroone/internal/links"
+	"github.com/amirrezakm/zeroone/internal/metrics"
+	"github.com/amirrezakm/zeroone/internal/monitor"
+	"github.com/amirrezakm/zeroone/internal/presence"
+	"github.com/amirrezakm/zeroone/internal/relay"
+	"github.com/amirrezakm/zeroone/internal/sessions"
+	"github.com/amirrezakm/zeroone/internal/snapshots"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/subscription"
+	"github.com/amirrezakm/zeroone/internal/tunnel"
+	"github.com/amirrezakm/zeroone/internal/usage"
+	"github.com/amirrezakm/zeroone/internal/xray"
 )
 
 type Options struct {
@@ -846,7 +846,7 @@ func clientEndpointURL(ep stack.ClientEndpoint, path string) string {
 		scheme = "https"
 	}
 	host := ep.Host
-	if ep.Port != 0 && !((scheme == "https" && ep.Port == 443) || (scheme == "http" && ep.Port == 80)) {
+	if ep.Port != 0 && (scheme != "https" || ep.Port != 443) && (scheme != "http" || ep.Port != 80) {
 		host = fmt.Sprintf("%s:%d", host, ep.Port)
 	}
 	if path == "" || path[0] != '/' {

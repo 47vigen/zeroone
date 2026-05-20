@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/tunnel"
-	"github.com/sakhtar/xray-stack-zeroone/internal/xray"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/tunnel"
+	"github.com/amirrezakm/zeroone/internal/xray"
 )
 
 type Manager struct {

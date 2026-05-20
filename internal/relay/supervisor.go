@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/events"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/events"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 // Supervisor runs the mhrv-rs binary as a child process, writes its config
