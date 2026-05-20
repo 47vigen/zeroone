@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.1.0 — 2026-05-20
+
+### Features
+
+- add air-gapped install flow for Iranian deployments (fbbb3cb)
+
+### Bug Fixes
+
+- handle deb822 apt sources; recover image tag from docker-load output (d3efd03)
+- pass --pull never to compose; mkdir before tar -C in docs (74f8994)
+- pin ZEROONE_VERSION from bundle; restore apt sources on failure (7dd09f8)
+
+### Documentation
+
+- add emojis and cross-links to install guides (9e3950b)
+- elevate offline install with Iran-specific rationale (8b75f69)
+- simplify with 3-step quick install + Advanced section (384bbee)
+
+### CI
+
+- publish prebuilt offline bundles as release assets (57adf31)
+- cover offline install scripts; fix two warnings (25d0e71)
+
 ## v1.0.0 — 2026-05-20
 
 ### ⚠ Breaking Changes
