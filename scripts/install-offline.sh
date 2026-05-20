@@ -164,6 +164,10 @@ EOF
     log "rewriting /etc/apt/sources.list to use ${mirror_path} (codename: ${codename})"
     if [ -f /etc/apt/sources.list ] && [ ! -f /etc/apt/sources.list.zeroone.bak ]; then
         cp /etc/apt/sources.list /etc/apt/sources.list.zeroone.bak
+        # Restore the backup on any exit path (including ERR), so a
+        # failing `apt-get update` / `apt-get install` doesn't leave the
+        # host permanently pointed at the Runflare mirror.
+        trap _restore_apt_sources_list EXIT
     fi
 
     case "${OS_ID}" in
@@ -188,11 +192,17 @@ EOF
 
     log "installing docker.io + docker-compose-v2"
     DEBIAN_FRONTEND=noninteractive apt-get install -y -qq docker.io docker-compose-v2
+}
 
-    if [ "${ZEROONE_KEEP_MIRROR:-0}" != "1" ] && [ -f /etc/apt/sources.list.zeroone.bak ]; then
-        log "restoring original /etc/apt/sources.list (set ZEROONE_KEEP_MIRROR=1 to keep the Runflare mirror)"
-        mv /etc/apt/sources.list.zeroone.bak /etc/apt/sources.list
+# EXIT-trap cleanup: put /etc/apt/sources.list back the way we found
+# it. Safe to run multiple times; a no-op if there's no backup.
+_restore_apt_sources_list() {
+    [ -f /etc/apt/sources.list.zeroone.bak ] || return 0
+    if [ "${ZEROONE_KEEP_MIRROR:-0}" = "1" ]; then
+        return 0
     fi
+    mv -f /etc/apt/sources.list.zeroone.bak /etc/apt/sources.list 2>/dev/null || true
+    log "restored original /etc/apt/sources.list (set ZEROONE_KEEP_MIRROR=1 next time to keep the Runflare mirror)"
 }
 
 ensure_docker() {
@@ -287,6 +297,41 @@ load_image() {
     docker load -i "${tar}"
 }
 
+# Set KEY=VALUE in ${ENV_FILE}, replacing an existing active line or
+# appending a new one with a header comment. Does not touch
+# commented-out forms (#KEY=...).
+set_env_var() {
+    local key=$1 value=$2
+    if grep -qE "^${key}=" "${ENV_FILE}" 2>/dev/null; then
+        sed -i "s|^${key}=.*|${key}=${value}|" "${ENV_FILE}"
+    else
+        printf '\n# Pinned by install-offline.sh from the bundle image tag.\n%s=%s\n' "${key}" "${value}" >> "${ENV_FILE}"
+    fi
+}
+
+# Pin ZEROONE_IMAGE + ZEROONE_VERSION in .env from the tag inside the
+# bundled image tar, so `docker compose up` resolves to the image we
+# just `docker load`-ed instead of whatever default (typically
+# `latest`) the .env.example shipped with.
+pin_image_from_tar() {
+    local tar=$1 loaded_tag base ver
+    loaded_tag=$(tag_from_tar "${tar}")
+    if [ -z "${loaded_tag}" ]; then
+        warn "could not read image tag from $(basename "${tar}"); .env left as-is"
+        return 0
+    fi
+    base="${loaded_tag%:*}"
+    ver="${loaded_tag##*:}"
+    # Always pin the version, even when the base repo is the default —
+    # otherwise a bundle built with ZEROONE_VERSION=v1.1.0 would run
+    # nothing (image:latest isn't loaded).
+    set_env_var ZEROONE_VERSION "${ver}"
+    if [ "${base}" != "ghcr.io/amirrezakm/zeroone" ]; then
+        set_env_var ZEROONE_IMAGE "${base}"
+    fi
+    log "pinned ZEROONE_IMAGE=${base} ZEROONE_VERSION=${ver} in ${ENV_FILE}"
+}
+
 # Extract the first image tag from a docker save tarball's manifest.
 # Used to pin ZEROONE_IMAGE in .env when the bundle was built for a
 # fork (e.g. ghcr.io/myfork/zeroone instead of the default).
@@ -347,22 +392,7 @@ cmd_install() {
     fi
 
     load_image "${BUNDLE_IMAGE_TAR}"
-    local loaded_tag
-    loaded_tag=$(tag_from_tar "${BUNDLE_IMAGE_TAR}")
-    if [ -n "${loaded_tag}" ]; then
-        ok "loaded image: ${loaded_tag}"
-        local base="${loaded_tag%:*}"
-        # If the bundle was built for a fork, pin ZEROONE_IMAGE so
-        # docker-compose resolves to the right tag without env exports.
-        if [ "${base}" != "ghcr.io/amirrezakm/zeroone" ]; then
-            if grep -qE '^ZEROONE_IMAGE=' "${ENV_FILE}" 2>/dev/null; then
-                sed -i "s|^ZEROONE_IMAGE=.*|ZEROONE_IMAGE=${base}|" "${ENV_FILE}"
-            else
-                printf '\n# Pinned by install-offline.sh from the bundle image tag.\nZEROONE_IMAGE=%s\n' "${base}" >> "${ENV_FILE}"
-            fi
-            log "pinned ZEROONE_IMAGE=${base} in ${ENV_FILE}"
-        fi
-    fi
+    pin_image_from_tar "${BUNDLE_IMAGE_TAR}"
 
     prompt_admin
 
@@ -436,6 +466,7 @@ cmd_update() {
     install -m 0755 "${BUNDLE_DIR}/install-offline.sh" "${CLI_PATH}"
 
     load_image "${BUNDLE_IMAGE_TAR}"
+    pin_image_from_tar "${BUNDLE_IMAGE_TAR}"
 
     log "restarting container"
     dc up -d
