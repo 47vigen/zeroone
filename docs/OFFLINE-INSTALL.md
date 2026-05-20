@@ -195,6 +195,7 @@ Repeat the same three steps with a new version:
 3. On the destination, extract and run the offline `update`
    subcommand against the new bundle directory:
    ```bash
+   mkdir -p /root/zeroone-v1.1.0
    tar -xzf zeroone-offline-v1.1.0-amd64.tar.gz -C /root/zeroone-v1.1.0
    sudo zeroone update -b /root/zeroone-v1.1.0
    ```

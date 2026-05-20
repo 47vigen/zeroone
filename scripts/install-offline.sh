@@ -400,7 +400,7 @@ cmd_install() {
     install -m 0755 "$0" "${CLI_PATH}"
 
     log "starting container"
-    dc up -d
+    dc up -d --pull never
 
     wait_for_health 90 || true
 
@@ -418,7 +418,7 @@ cmd_install() {
     print_summary
 }
 
-cmd_up()      { dc up -d; }
+cmd_up()      { dc up -d --pull never; }
 cmd_down()    { dc down; }
 cmd_restart() { dc restart zeroone; }
 
@@ -469,7 +469,7 @@ cmd_update() {
     pin_image_from_tar "${BUNDLE_IMAGE_TAR}"
 
     log "restarting container"
-    dc up -d
+    dc up -d --pull never
     docker image prune -f >/dev/null 2>&1 || true
     ok "updated"
 }
@@ -563,7 +563,7 @@ cmd_restore() {
     log "extracting ${in}"
     tar -xzf "${in}" -C /
     log "starting container"
-    dc up -d
+    dc up -d --pull never
     ok "restored"
 }
 
