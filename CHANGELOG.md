@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.0 — 2026-05-20
+
+### Features
+
+- one-tap "Add to app" deeplinks in user portal (56a1726)
+
 ## v0.1.0 — 2026-05-20
 
 ### Features
