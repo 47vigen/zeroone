@@ -42,7 +42,9 @@ zeroone backup -o /root/zeroone-backup.tgz
 ```
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for the full install guide and
-[`docs/CLI.md`](docs/CLI.md) for every subcommand.
+[`docs/CLI.md`](docs/CLI.md) for every subcommand. For air-gapped /
+Iranian deployments where the destination cannot reach GHCR, see
+[`docs/OFFLINE-INSTALL.md`](docs/OFFLINE-INSTALL.md).
 
 ## Manual / Docker Compose install
 
@@ -84,6 +86,7 @@ shaping (`nft` / `tc`), or systemd-managed tunnels, see
 - `web/app/` — React/Vite panel.
 - `docker/` — Dockerfile, compose file, env example.
 - `scripts/` — `install.sh` (the one-line installer + CLI wrapper),
+  `offline-bundle.sh` + `install-offline.sh` (air-gapped flow),
   `build.sh`, `check.sh`, `package.sh`.
 
 ## Development
@@ -113,6 +116,8 @@ process instead of via systemd).
 - [`docs/SECURITY.md`](docs/SECURITY.md) — TLS, reverse proxy, port hardening.
 - [`docs/HOST-INSTALL.md`](docs/HOST-INSTALL.md) — systemd install with
   OpenVPN / failover / bandwidth shaping.
+- [`docs/OFFLINE-INSTALL.md`](docs/OFFLINE-INSTALL.md) — air-gapped
+  install via SFTP + `docker save`/`docker load` (Iranian operators).
 - [`docs/runflare-edge-deploy.md`](docs/runflare-edge-deploy.md) — edge
   relay deployment on PaaS providers.
 
