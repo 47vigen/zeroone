@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.1.0 — 2026-05-20
+
+### Features
+
+- add ESLint + Prettier and format the whole tree (ec022ca)
+- automate semver releases on merge to main (17666d8)
+- let forks install from their own GHCR via ZEROONE_REPO (3359981)
+- dockerize + one-line installer + CI (6354edd)
+
+### Bug Fixes
+
+- bump golangci-lint-action to v7 and Trivy to master (5f8d2fe)
+- copy CLI from disk path instead of $0 (86a4a48)
+- honor ZEROONE_ADMIN_LISTEN and ZEROONE_STATE_DIR for container template (4b6cc3b)
+- gofmt + race in xrayproc supervisor (6bd988f)
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
