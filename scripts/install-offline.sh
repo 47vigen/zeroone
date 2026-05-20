@@ -161,14 +161,22 @@ EOF
         ubuntu) mirror_path="${LINUX_MIRROR}/ubuntu" ;;
     esac
 
-    log "rewriting /etc/apt/sources.list to use ${mirror_path} (codename: ${codename})"
-    if [ -f /etc/apt/sources.list ] && [ ! -f /etc/apt/sources.list.zeroone.bak ]; then
-        cp /etc/apt/sources.list /etc/apt/sources.list.zeroone.bak
-        # Restore the backup on any exit path (including ERR), so a
-        # failing `apt-get update` / `apt-get install` doesn't leave the
-        # host permanently pointed at the Runflare mirror.
-        trap _restore_apt_sources_list EXIT
-    fi
+    log "rewriting apt sources to use ${mirror_path} (codename: ${codename})"
+
+    # Arm the EXIT trap before touching any file so a failure between
+    # here and the end of the function still restores everything.
+    trap _restore_apt_sources_list EXIT
+
+    # Modern Ubuntu (24.04+) and Debian (13+) keep their default repo
+    # configuration in /etc/apt/sources.list.d/{ubuntu,debian}.sources
+    # (Deb822 format) rather than /etc/apt/sources.list. If we only
+    # rewrote sources.list, apt would still hit the original blocked
+    # mirrors via the Deb822 file. Disable any Deb822 default by
+    # renaming it aside; our sources.list takes over for the duration
+    # of the install, and the rename is undone by the EXIT trap.
+    _backup_apt_file /etc/apt/sources.list
+    _disable_apt_file /etc/apt/sources.list.d/ubuntu.sources
+    _disable_apt_file /etc/apt/sources.list.d/debian.sources
 
     case "${OS_ID}" in
         debian)
@@ -194,15 +202,43 @@ EOF
     DEBIAN_FRONTEND=noninteractive apt-get install -y -qq docker.io docker-compose-v2
 }
 
-# EXIT-trap cleanup: put /etc/apt/sources.list back the way we found
-# it. Safe to run multiple times; a no-op if there's no backup.
+# Copy ${1} → ${1}.zeroone.bak so we can rewrite the file in place
+# and restore it later. No-op if the file doesn't exist or a backup
+# is already present.
+_backup_apt_file() {
+    local f=$1
+    [ -f "${f}" ] || return 0
+    [ -e "${f}.zeroone.bak" ] && return 0
+    cp "${f}" "${f}.zeroone.bak"
+}
+
+# Rename ${1} → ${1}.zeroone.bak so apt stops reading it. Used for
+# Deb822 default sources in /etc/apt/sources.list.d/ on modern
+# Ubuntu / Debian — we want only our /etc/apt/sources.list active
+# during the install.
+_disable_apt_file() {
+    local f=$1
+    [ -f "${f}" ] || return 0
+    [ -e "${f}.zeroone.bak" ] && return 0
+    mv "${f}" "${f}.zeroone.bak"
+}
+
+# EXIT-trap cleanup: put every apt sources file back the way we
+# found it. Safe to run multiple times; a no-op if there's no
+# backup. Honors ZEROONE_KEEP_MIRROR=1 to skip restoration.
 _restore_apt_sources_list() {
-    [ -f /etc/apt/sources.list.zeroone.bak ] || return 0
-    if [ "${ZEROONE_KEEP_MIRROR:-0}" = "1" ]; then
-        return 0
-    fi
-    mv -f /etc/apt/sources.list.zeroone.bak /etc/apt/sources.list 2>/dev/null || true
-    log "restored original /etc/apt/sources.list (set ZEROONE_KEEP_MIRROR=1 next time to keep the Runflare mirror)"
+    [ "${ZEROONE_KEEP_MIRROR:-0}" = "1" ] && return 0
+    local restored=0 f
+    for f in /etc/apt/sources.list \
+             /etc/apt/sources.list.d/ubuntu.sources \
+             /etc/apt/sources.list.d/debian.sources; do
+        [ -f "${f}.zeroone.bak" ] || continue
+        mv -f "${f}.zeroone.bak" "${f}" 2>/dev/null || true
+        restored=1
+    done
+    [ "${restored}" -eq 1 ] && \
+        log "restored original apt sources (set ZEROONE_KEEP_MIRROR=1 next time to keep the Runflare mirror)"
+    return 0
 }
 
 ensure_docker() {
@@ -290,11 +326,22 @@ prompt_admin() {
     printf '\n'
 }
 
-# Load image tar and print the loaded tag(s).
+# Load image tar and capture the docker-load output so the tag can
+# be recovered without relying on python3. Sets LOAD_OUTPUT as a
+# script-global. The captured output is also printed to the user.
+LOAD_OUTPUT=""
 load_image() {
     local tar=$1
     log "loading image from $(basename "${tar}")"
-    docker load -i "${tar}"
+    LOAD_OUTPUT=$(docker load -i "${tar}" 2>&1)
+    printf '%s\n' "${LOAD_OUTPUT}"
+}
+
+# Parse `Loaded image: <tag>` from the last docker-load output.
+# Works on every system; no python3 needed.
+tag_from_load_output() {
+    [ -n "${LOAD_OUTPUT}" ] || return 0
+    printf '%s\n' "${LOAD_OUTPUT}" | sed -n 's/^Loaded image: //p' | head -n1
 }
 
 # Set KEY=VALUE in ${ENV_FILE}, replacing an existing active line or
@@ -315,10 +362,15 @@ set_env_var() {
 # `latest`) the .env.example shipped with.
 pin_image_from_tar() {
     local tar=$1 loaded_tag base ver
-    loaded_tag=$(tag_from_tar "${tar}")
+    # Prefer the tag printed by `docker load` (no python3 dependency,
+    # works on minimal systems). Fall back to parsing the tar manifest
+    # if for some reason docker-load output didn't include a tag.
+    loaded_tag=$(tag_from_load_output)
     if [ -z "${loaded_tag}" ]; then
-        warn "could not read image tag from $(basename "${tar}"); .env left as-is"
-        return 0
+        loaded_tag=$(tag_from_tar "${tar}")
+    fi
+    if [ -z "${loaded_tag}" ]; then
+        die "could not determine image tag from docker-load output or $(basename "${tar}") manifest. The bundle may be malformed. Check \`docker images\` for the loaded tag, set ZEROONE_VERSION + ZEROONE_IMAGE in ${ENV_FILE} manually, then run 'zeroone up'."
     fi
     base="${loaded_tag%:*}"
     ver="${loaded_tag##*:}"
