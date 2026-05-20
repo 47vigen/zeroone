@@ -80,13 +80,10 @@ detect_os() {
     OS_LIKE=${ID_LIKE:-}
     OS_CODENAME=${VERSION_CODENAME:-}
     case "${OS_ID}" in
-        debian|ubuntu) PKG=apt ;;
-        centos|rhel|fedora|almalinux|rocky) PKG=dnf ;;
-        alpine) PKG=apk ;;
+        debian|ubuntu|centos|rhel|fedora|almalinux|rocky|alpine) : ;;
         *)
             case "${OS_LIKE}" in
-                *debian*) PKG=apt ;;
-                *rhel*|*fedora*) PKG=dnf ;;
+                *debian*|*rhel*|*fedora*) : ;;
                 *) die "unsupported OS: ${OS_ID} (${OS_LIKE:-no ID_LIKE})" ;;
             esac
             ;;
@@ -114,8 +111,15 @@ find_bundle() {
     local dir tar
     for dir in "${candidates[@]}"; do
         [ -d "${dir}" ] || continue
-        # Match the bundler's output pattern.
-        tar=$(ls -1 "${dir}"/zeroone-image*.tar 2>/dev/null | head -n1 || true)
+        # Match the bundler's output pattern. Glob expansion (not ls)
+        # so filenames with spaces are handled correctly.
+        tar=""
+        for candidate in "${dir}"/zeroone-image*.tar; do
+            if [ -f "${candidate}" ]; then
+                tar="${candidate}"
+                break
+            fi
+        done
         if [ -n "${tar}" ] \
             && [ -f "${dir}/docker-compose.yml" ] \
             && [ -f "${dir}/.env.example" ]; then
