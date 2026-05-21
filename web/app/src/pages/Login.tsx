@@ -74,8 +74,8 @@ export default function Login({
           <div className="mb-4 flex items-start gap-2 rounded-md border border-warn/40 bg-warn/10 p-3 text-xs">
             <ShieldAlert size={14} className="mt-0.5 shrink-0 text-warn" />
             <div>
-              No admin accounts exist yet. Pick a username and password — this account will own
-              the panel until you add more admins from Settings.
+              No admin accounts exist yet. Pick a username and password — this account will own the
+              panel until you add more admins from Settings.
             </div>
           </div>
         )}
