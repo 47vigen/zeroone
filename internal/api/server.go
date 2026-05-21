@@ -522,6 +522,11 @@ func (s *Server) failoverMode(w http.ResponseWriter, r *http.Request) {
 	priorMode := failover.CurrentMode(cfg)
 	priorFailoverMode := cfg.Failover.EffectiveMode()
 	priorPreferredTunnel := cfg.Failover.PreferredTunnel
+	autoTitle := fmt.Sprintf("Failover → %s", req.Mode)
+	if req.PreferredTunnel != "" {
+		autoTitle += " (" + req.PreferredTunnel + ")"
+	}
+	s.autoSnapshot(s.actor(r), "failover.mode.set", autoTitle)
 	if err := cfg.SetFailoverMode(req.Mode, req.PreferredTunnel); err != nil {
 		s.fail(w, http.StatusBadRequest, err)
 		return
@@ -783,6 +788,7 @@ func (s *Server) upsertClientEndpoint(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, http.StatusBadRequest, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "client_endpoint.upsert", fmt.Sprintf("Client endpoint upsert: %s", req.Name))
 	if err := stack.Save(s.configPath, cfg); err != nil {
 		s.fail(w, http.StatusBadRequest, err)
 		return
@@ -802,6 +808,7 @@ func (s *Server) deleteClientEndpoint(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, http.StatusBadRequest, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "client_endpoint.delete", fmt.Sprintf("Client endpoint delete: %s", name))
 	if err := stack.Save(s.configPath, cfg); err != nil {
 		s.fail(w, http.StatusBadRequest, err)
 		return
@@ -1026,8 +1033,23 @@ func (s *Server) xrayApply(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	// Title comes from the panel's Apply dialog. Body is optional (curl
+	// users may POST without one) so we fall back to a generic default
+	// rather than rejecting the request.
+	var req struct {
+		Title string `json:"title"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	title := strings.TrimSpace(req.Title)
+	if title == "" {
+		title = "Apply Xray config"
+	}
 	if s.snapshots != nil {
-		if _, err := s.snapshots.Capture(s.configPath, cfg.Server.XrayConfigPath); err != nil {
+		if _, err := s.snapshots.Capture(s.configPath, cfg.Server.XrayConfigPath, snapshots.Info{
+			Title:  title,
+			Source: snapshots.SourceManual,
+			Action: "xray.apply",
+		}); err != nil {
 			// Non-fatal: capture failure shouldn't block apply.
 			s.recordAudit(s.actor(r), "snapshot.error", "", map[string]any{"error": err.Error()})
 		}
@@ -1038,7 +1060,7 @@ func (s *Server) xrayApply(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 500, err)
 		return
 	}
-	s.recordAudit(s.actor(r), "xray.apply", "", map[string]any{"changed": plan.Changed, "backup_path": plan.BackupPath})
+	s.recordAudit(s.actor(r), "xray.apply", "", map[string]any{"changed": plan.Changed, "backup_path": plan.BackupPath, "title": title})
 	s.write(w, map[string]any{"ok": true, "plan": plan})
 }
 
@@ -1119,6 +1141,7 @@ func (s *Server) quotaApply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	plan := enforce.PlanQuota(s.cfg, state, time.Now())
+	s.autoSnapshot(s.actor(r), "quota.apply", fmt.Sprintf("Quota apply (%d actions)", len(plan.Actions)))
 	next := s.cfg
 	if err := enforce.ApplyQuotaPlan(&next, plan); err != nil {
 		s.fail(w, 500, err)
@@ -1147,6 +1170,7 @@ func (s *Server) bandwidthApply(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, http.StatusForbidden, fmt.Errorf("bandwidth apply is disabled; start with -allow-apply"))
 		return
 	}
+	s.autoSnapshot(s.actor(r), "bandwidth.apply", "Bandwidth apply")
 	result, err := (bandwidth.Manager{}).Apply(r.Context(), s.cfg)
 	if err != nil {
 		s.fail(w, 500, err)
@@ -1418,6 +1442,7 @@ func (s *Server) addDirectDomain(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "rule.direct.add", fmt.Sprintf("Direct domain add: %s", req.Domain))
 	if !s.save(w) {
 		return
 	}
@@ -1436,6 +1461,7 @@ func (s *Server) deleteDirectDomain(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "rule.direct.delete", fmt.Sprintf("Direct domain delete: %s", domain))
 	if !s.save(w) {
 		return
 	}
@@ -1474,6 +1500,7 @@ func (s *Server) addSOCKS(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "socks.create", fmt.Sprintf("SOCKS create: %s", req.Name))
 	if !s.save(w) {
 		return
 	}
@@ -1502,6 +1529,7 @@ func (s *Server) updateSOCKS(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "socks.update", fmt.Sprintf("SOCKS update: %s", req.Username))
 	if !s.save(w) {
 		return
 	}
@@ -1515,6 +1543,7 @@ func (s *Server) deleteSOCKS(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 404, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "socks.delete", fmt.Sprintf("SOCKS delete: %s", username))
 	if !s.save(w) {
 		return
 	}

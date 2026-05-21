@@ -15,6 +15,7 @@ import RoutesPage from "./pages/Routes";
 import Tunnels from "./pages/Tunnels";
 import Logs from "./pages/Logs";
 import Snapshots from "./pages/Snapshots";
+import XrayConfig from "./pages/XrayConfig";
 import Plugins from "./pages/Plugins";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
@@ -81,6 +82,7 @@ function Inner() {
             <Route path="/tunnels" element={<Tunnels />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/snapshots" element={<Snapshots />} />
+            <Route path="/xray-config" element={<XrayConfig />} />
             <Route path="/plugins" element={<Plugins />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
