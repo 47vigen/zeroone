@@ -136,7 +136,7 @@ export default function SettingsXrayPanel() {
 
   return (
     <div className="panel lg:col-span-2">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <Zap size={14} /> Xray runtime
         </h2>
@@ -154,13 +154,13 @@ export default function SettingsXrayPanel() {
       </div>
 
       <div className="grid gap-0 lg:grid-cols-[1.2fr,1fr]">
-        <div className="space-y-3 border-b border-border p-5 dark:border-border-dark lg:border-b-0 lg:border-r">
+        <div className="border-border dark:border-border-dark space-y-3 border-b p-5 lg:border-r lg:border-b-0">
           <StatusRow label="Installed">
             <span className="font-mono text-sm">{installed || "—"}</span>
             <SourcePill source={st?.active?.source} />
           </StatusRow>
           <StatusRow label="Image-baked">
-            <span className="font-mono text-xs text-muted dark:text-muted-dark">
+            <span className="text-muted dark:text-muted-dark font-mono text-xs">
               {st?.image_version || "—"}
             </span>
           </StatusRow>
@@ -172,24 +172,24 @@ export default function SettingsXrayPanel() {
               </span>
             )}
             {st?.state?.last_check ? (
-              <span className="text-xs text-muted dark:text-muted-dark">
+              <span className="text-muted dark:text-muted-dark text-xs">
                 checked {relativeTime(st.state.last_check)}
               </span>
             ) : null}
           </StatusRow>
           <StatusRow label="Binary path">
-            <code className="break-all font-mono text-xs text-muted dark:text-muted-dark">
+            <code className="text-muted dark:text-muted-dark font-mono text-xs break-all">
               {st?.active?.binary}
             </code>
           </StatusRow>
           <StatusRow label="Assets dir">
-            <code className="break-all font-mono text-xs text-muted dark:text-muted-dark">
+            <code className="text-muted dark:text-muted-dark font-mono text-xs break-all">
               {st?.active?.assets_dir}
             </code>
           </StatusRow>
           {st?.state?.binary_sha256 && (
             <StatusRow label="Binary sha256">
-              <code className="break-all font-mono text-xs text-muted dark:text-muted-dark">
+              <code className="text-muted dark:text-muted-dark font-mono text-xs break-all">
                 {st.state.binary_sha256.slice(0, 12)}…{st.state.binary_sha256.slice(-6)}
               </code>
             </StatusRow>
@@ -230,7 +230,7 @@ export default function SettingsXrayPanel() {
             <h3 className="kpi-label mb-2 flex items-center gap-2">
               <Upload size={12} /> Offline upload
             </h3>
-            <p className="mb-2 text-xs text-muted dark:text-muted-dark">
+            <p className="text-muted dark:text-muted-dark mb-2 text-xs">
               Upload an upstream <code className="font-mono">Xray-linux-*.zip</code>. The geo files
               bundled inside are installed alongside the binary.
             </p>
@@ -283,7 +283,7 @@ export default function SettingsXrayPanel() {
       />
 
       {!allowApply && (
-        <div className="flex items-center gap-2 border-t border-border px-5 py-2 text-xs text-warn dark:border-border-dark dark:text-warn-dark">
+        <div className="border-border text-warn dark:border-border-dark dark:text-warn-dark flex items-center gap-2 border-t px-5 py-2 text-xs">
           <AlertTriangle size={12} />
           Updates and mirror changes require the daemon to be started with{" "}
           <code className="font-mono">-allow-apply</code>.
@@ -318,19 +318,19 @@ function JobProgress({ job }: { job: XrayJob | null }) {
     job.bytes_total && job.bytes_done ? Math.min(100, (job.bytes_done / job.bytes_total) * 100) : 0;
   const finished = job.phase === "done" || job.phase === "failed";
   return (
-    <div className="rounded-lg border border-border p-3 dark:border-border-dark">
+    <div className="border-border dark:border-border-dark rounded-lg border p-3">
       <div className="flex items-center justify-between text-xs">
         <span className="font-medium">
           {job.target_version ? `${job.target_version} · ` : ""}
           {job.phase}
         </span>
-        <span className="font-mono text-muted dark:text-muted-dark">
+        <span className="text-muted dark:text-muted-dark font-mono">
           {job.bytes_done ? bytes(job.bytes_done) : ""}
           {job.bytes_total ? ` / ${bytes(job.bytes_total)}` : ""}
         </span>
       </div>
       {!finished && (
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded bg-bg dark:bg-bg-dark">
+        <div className="bg-bg dark:bg-bg-dark mt-2 h-1.5 w-full overflow-hidden rounded">
           <div
             className="bg-primary h-full transition-[width] duration-200"
             style={{ width: `${pct}%` }}
@@ -338,7 +338,7 @@ function JobProgress({ job }: { job: XrayJob | null }) {
         </div>
       )}
       {job.error && (
-        <div className="mt-2 break-all text-xs text-bad dark:text-bad-dark">{job.error}</div>
+        <div className="text-bad dark:text-bad-dark mt-2 text-xs break-all">{job.error}</div>
       )}
     </div>
   );
@@ -369,9 +369,9 @@ function MirrorConfig({
   useEffect(() => setForm(initial), [initial]);
 
   return (
-    <div className="border-t border-border p-5 dark:border-border-dark">
+    <div className="border-border dark:border-border-dark border-t p-5">
       <h3 className="kpi-label mb-2">Mirror configuration</h3>
-      <p className="mb-3 text-xs text-muted dark:text-muted-dark">
+      <p className="text-muted dark:text-muted-dark mb-3 text-xs">
         Override the upstream URLs panel-wide. Empty values fall back to the env defaults (
         <code className="font-mono">ZEROONE_XRAY_RELEASE_MIRROR</code>,{" "}
         <code className="font-mono">ZEROONE_XRAY_ASSETS_MIRROR</code>), then to GitHub.
