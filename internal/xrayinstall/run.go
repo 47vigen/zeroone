@@ -213,6 +213,12 @@ func (i *Installer) runUpload(ctx context.Context, j *Job, zipPath, expectedSHA,
 	defer i.endJob(j)
 	tmpDir := filepath.Join(i.Root, "tmp", j.ID)
 	defer func() { _ = os.RemoveAll(tmpDir) }()
+	// The upload staging dir is created by the API handler before the job
+	// is queued (so the zip exists on disk for us to verify). The handler
+	// only cleans it up on its own error paths, so we own success-path
+	// cleanup here — otherwise every completed upload leaves a unique
+	// tmp/upload-<id>/ behind forever.
+	defer func() { _ = os.RemoveAll(filepath.Dir(zipPath)) }()
 
 	j.setPhase(PhaseVerifying)
 	gotSHA, err := FileSHA256(zipPath)

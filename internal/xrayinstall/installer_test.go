@@ -185,6 +185,83 @@ func TestStateRoundTrip(t *testing.T) {
 	}
 }
 
+// TestCommitInstallHonorsIncludeGeo locks in the panel toggle wiring:
+// when stack.xray_update.include_geo is false, commitInstall must leave
+// the assets dir alone even though the release zip carried geo files.
+func TestCommitInstallHonorsIncludeGeo(t *testing.T) {
+	dir := t.TempDir()
+	i := New(filepath.Join(dir, "ov"), filepath.Join(dir, "img"), filepath.Join(dir, "imga"), "", nil)
+	if err := i.EnsureDirs(); err != nil {
+		t.Fatal(err)
+	}
+	// Pre-existing assets that the operator curated — must survive.
+	assetsDir := filepath.Join(i.Root, "assets")
+	if err := os.MkdirAll(assetsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	preserved := []byte("operator-curated-geoip")
+	if err := os.WriteFile(filepath.Join(assetsDir, "geoip.dat"), preserved, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Stage the inputs commitInstall expects: a binary plus geo files.
+	stage := filepath.Join(i.Root, "tmp", "stage")
+	if err := os.MkdirAll(stage, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	bin := filepath.Join(stage, "xray")
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	geoIP := filepath.Join(stage, "geoip.dat")
+	if err := os.WriteFile(geoIP, []byte("from-release-zip"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	extracted := extractedAssets{BinaryPath: bin, GeoIPPath: geoIP}
+
+	off := false
+	i.LoadConfig = func() stack.Config {
+		return stack.Config{XrayUpdate: stack.XrayUpdateConfig{IncludeGeo: &off}}
+	}
+	if err := i.commitInstall(extracted, "v1.2.3", "online", ""); err != nil {
+		t.Fatalf("commitInstall: %v", err)
+	}
+	got, err := os.ReadFile(filepath.Join(assetsDir, "geoip.dat"))
+	if err != nil {
+		t.Fatalf("read geoip.dat after toggle-off install: %v", err)
+	}
+	if string(got) != string(preserved) {
+		t.Fatalf("geoip.dat overwritten despite include_geo=false: got %q", got)
+	}
+	if _, err := os.Stat(filepath.Join(i.Root, "bin", "xray")); err != nil {
+		t.Fatalf("binary swap should still complete: %v", err)
+	}
+
+	// Flip include_geo on (and stage a fresh geo file again — the previous
+	// run did the os.Rename so the source file is gone) → assets refresh.
+	if err := os.WriteFile(geoIP, []byte("from-release-zip"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Re-stage the binary too: prior commitInstall moved it out.
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	on := true
+	i.LoadConfig = func() stack.Config {
+		return stack.Config{XrayUpdate: stack.XrayUpdateConfig{IncludeGeo: &on}}
+	}
+	if err := i.commitInstall(extracted, "v1.2.4", "online", ""); err != nil {
+		t.Fatalf("commitInstall (geo on): %v", err)
+	}
+	got, err = os.ReadFile(filepath.Join(assetsDir, "geoip.dat"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "from-release-zip" {
+		t.Fatalf("geoip.dat should be refreshed when include_geo=true; got %q", got)
+	}
+}
+
 func TestResetToImageWipesOverride(t *testing.T) {
 	dir := t.TempDir()
 	i := New(filepath.Join(dir, "ov"), filepath.Join(dir, "img"), filepath.Join(dir, "imga"), "", nil)

@@ -170,7 +170,10 @@ func (i *Installer) commitInstall(extracted extractedAssets, version, source, bi
 	}
 
 	// Geo data: atomic per file. Absent in extracted means "leave the
-	// existing assets dir alone, fall back to image".
+	// existing assets dir alone, fall back to image". The panel toggle
+	// `xray_update.include_geo` (true when unset) further suppresses
+	// the swap so admins who curate their own geo files don't get them
+	// silently overwritten on every xray update.
 	state := State{
 		InstalledVersion: version,
 		InstalledAt:      time.Now().Unix(),
@@ -182,30 +185,32 @@ func (i *Installer) commitInstall(extracted extractedAssets, version, source, bi
 		LastCheckUnix:    prev.LastCheckUnix,
 		LastCheckLatest:  prev.LastCheckLatest,
 	}
-	assetsDir := filepath.Join(i.Root, "assets")
-	if err := os.MkdirAll(assetsDir, 0o755); err != nil {
-		return err
-	}
-	for _, m := range []struct {
-		from, name string
-		shaOut     *string
-	}{
-		{extracted.GeoIPPath, "geoip.dat", &state.GeoIPSHA256},
-		{extracted.GeoSitePath, "geosite.dat", &state.GeoSiteSHA256},
-	} {
-		if m.from == "" {
-			continue
-		}
-		dst := filepath.Join(assetsDir, m.name)
-		dstTmp := dst + ".new"
-		if err := os.Rename(m.from, dstTmp); err != nil {
+	if i.includeGeo() {
+		assetsDir := filepath.Join(i.Root, "assets")
+		if err := os.MkdirAll(assetsDir, 0o755); err != nil {
 			return err
 		}
-		if err := os.Rename(dstTmp, dst); err != nil {
-			return err
-		}
-		if sha, err := FileSHA256(dst); err == nil {
-			*m.shaOut = sha
+		for _, m := range []struct {
+			from, name string
+			shaOut     *string
+		}{
+			{extracted.GeoIPPath, "geoip.dat", &state.GeoIPSHA256},
+			{extracted.GeoSitePath, "geosite.dat", &state.GeoSiteSHA256},
+		} {
+			if m.from == "" {
+				continue
+			}
+			dst := filepath.Join(assetsDir, m.name)
+			dstTmp := dst + ".new"
+			if err := os.Rename(m.from, dstTmp); err != nil {
+				return err
+			}
+			if err := os.Rename(dstTmp, dst); err != nil {
+				return err
+			}
+			if sha, err := FileSHA256(dst); err == nil {
+				*m.shaOut = sha
+			}
 		}
 	}
 

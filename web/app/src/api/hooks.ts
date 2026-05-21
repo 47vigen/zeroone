@@ -143,7 +143,8 @@ export function useSyncUsage() {
 export function useRollback() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => post(`/api/snapshots/rollback?id=${encodeURIComponent(id)}`),
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      post(`/api/snapshots/rollback?id=${encodeURIComponent(id)}`, { title }),
     onSuccess: () => qc.invalidateQueries(),
   });
 }
