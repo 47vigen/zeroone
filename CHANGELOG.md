@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.0 — 2026-05-21
+
+### Features
+
+- titled snapshots + Xray Config panel page (30dfa31)
+
 ## v1.1.1 — 2026-05-21
 
 ### Bug Fixes
