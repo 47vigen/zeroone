@@ -10,11 +10,13 @@ export default function DiffModal({ open, onClose }: { open: boolean; onClose: (
   const [live, setLive] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState("Deploy generated config");
   const apply = useApplyXray();
   const toast = useToast();
 
   useEffect(() => {
     if (!open) return;
+    setTitle("Deploy generated config");
     setLoading(true);
     setError(null);
     Promise.all([api<any>("/api/xray/generated"), api<any>("/api/xray/live")])
@@ -41,10 +43,10 @@ export default function DiffModal({ open, onClose }: { open: boolean; onClose: (
         className="panel flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
           <div>
             <h2 className="font-semibold">Deploy generated config</h2>
-            <p className="text-xs text-muted dark:text-muted-dark">
+            <p className="text-muted dark:text-muted-dark text-xs">
               Review the diff between live Xray and the generated config before applying.
             </p>
           </div>
@@ -52,16 +54,16 @@ export default function DiffModal({ open, onClose }: { open: boolean; onClose: (
             <X size={14} />
           </button>
         </div>
-        <div className="flex-1 overflow-auto bg-bg p-4 dark:bg-bg-dark">
-          {loading && <div className="p-4 text-sm text-muted dark:text-muted-dark">Loading…</div>}
-          {error && <div className="p-4 text-sm text-bad dark:text-bad-dark">Error: {error}</div>}
+        <div className="bg-bg dark:bg-bg-dark flex-1 overflow-auto p-4">
+          {loading && <div className="text-muted dark:text-muted-dark p-4 text-sm">Loading…</div>}
+          {error && <div className="text-bad dark:text-bad-dark p-4 text-sm">Error: {error}</div>}
           {!loading && !error && diffText === "" && (
-            <div className="p-4 text-sm text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark p-4 text-sm">
               No diff between generated and live. Apply will be a no-op.
             </div>
           )}
           {!loading && !error && diffText !== "" && (
-            <pre className="whitespace-pre-wrap font-mono text-xs leading-snug">
+            <pre className="font-mono text-xs leading-snug whitespace-pre-wrap">
               {diffText.split("\n").map((line, i) => {
                 const cls = line.startsWith("+")
                   ? "text-ok dark:text-ok-dark bg-ok/5"
@@ -77,15 +79,26 @@ export default function DiffModal({ open, onClose }: { open: boolean; onClose: (
             </pre>
           )}
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex items-center gap-2 border-t px-5 py-3">
+          <label className="text-muted dark:text-muted-dark text-xs" htmlFor="diff-title">
+            Snapshot title
+          </label>
+          <input
+            id="diff-title"
+            type="text"
+            className="input flex-1"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={120}
+          />
           <button className="btn" onClick={onClose}>
             Cancel
           </button>
           <button
             className="btn btn-primary"
-            disabled={apply.isPending}
+            disabled={apply.isPending || !title.trim()}
             onClick={() =>
-              apply.mutate(undefined, {
+              apply.mutate(title.trim(), {
                 onSuccess: () => {
                   toast.show("Apply succeeded", "ok");
                   onClose();

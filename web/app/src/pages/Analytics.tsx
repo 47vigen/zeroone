@@ -51,7 +51,7 @@ export default function Analytics() {
         title="Analytics"
         subtitle="Tunnel bandwidth, latency, and host load"
         actions={
-          <div className="flex overflow-hidden rounded-lg border border-border text-sm dark:border-border-dark">
+          <div className="border-border dark:border-border-dark flex overflow-hidden rounded-lg border text-sm">
             {(["1h", "24h"] as Range[]).map((r) => (
               <button
                 key={r}
@@ -91,7 +91,7 @@ export default function Analytics() {
                 />
                 <Tooltip
                   labelFormatter={(v) => formatTimeShort(Number(v))}
-                  formatter={(v: number) => bps(v)}
+                  formatter={(v) => bps(Number(v))}
                   contentStyle={{ background: "var(--tw-prose-body)", borderRadius: 8 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -177,7 +177,7 @@ export default function Analytics() {
               <YAxis fontSize={11} stroke="rgba(125,125,135,.7)" width={40} domain={[0, 100]} />
               <Tooltip
                 labelFormatter={(v) => formatTimeShort(Number(v))}
-                formatter={(v: number) => `${v.toFixed(0)}%`}
+                formatter={(v) => `${Number(v).toFixed(0)}%`}
                 contentStyle={{ borderRadius: 8 }}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -224,16 +224,16 @@ function TopDestinations() {
   const totalAll = data?.total ?? 0;
   return (
     <section className="panel mb-5">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <Globe size={14} /> Top destinations
         </h2>
-        <span className="text-xs text-muted dark:text-muted-dark">
+        <span className="text-muted dark:text-muted-dark text-xs">
           {items.length} of {totalAll.toLocaleString()} requests · last {data?.window ?? "48h"}
         </span>
       </div>
       {items.length === 0 ? (
-        <div className="px-5 py-6 text-sm text-muted dark:text-muted-dark">
+        <div className="text-muted dark:text-muted-dark px-5 py-6 text-sm">
           Collecting destinations from the Xray journal — give it a minute.
         </div>
       ) : (
@@ -244,7 +244,7 @@ function TopDestinations() {
             <div className="text-right">Requests</div>
             <div>Share</div>
           </div>
-          <div className="divide-y divide-border dark:divide-border-dark">
+          <div className="divide-border dark:divide-border-dark divide-y">
             {items.map((it, idx) => {
               const pct = totalAll > 0 ? (it.requests / totalAll) * 100 : 0;
               return (
@@ -252,7 +252,7 @@ function TopDestinations() {
                   key={it.destination}
                   className="grid grid-cols-[60px,1fr,160px,180px] items-center gap-2 px-4 py-2 text-sm"
                 >
-                  <div className="pr-2 text-right tabular-nums text-muted dark:text-muted-dark">
+                  <div className="text-muted dark:text-muted-dark pr-2 text-right tabular-nums">
                     {idx + 1}
                   </div>
                   <div className="truncate font-mono text-xs" title={it.destination}>
@@ -262,13 +262,13 @@ function TopDestinations() {
                     {it.requests.toLocaleString()}
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg dark:bg-bg-dark">
+                    <div className="bg-bg dark:bg-bg-dark h-1.5 flex-1 overflow-hidden rounded-full">
                       <div
                         className="h-full rounded-full"
                         style={{ width: `${pct}%`, background: "#1a7fbf" }}
                       />
                     </div>
-                    <span className="w-10 text-right text-xs tabular-nums text-muted dark:text-muted-dark">
+                    <span className="text-muted dark:text-muted-dark w-10 text-right text-xs tabular-nums">
                       {pct.toFixed(1)}%
                     </span>
                   </div>
@@ -276,7 +276,7 @@ function TopDestinations() {
               );
             })}
           </div>
-          <div className="border-t border-border px-5 py-2 text-xs text-muted dark:border-border-dark dark:text-muted-dark">
+          <div className="border-border text-muted dark:border-border-dark dark:text-muted-dark border-t px-5 py-2 text-xs">
             Showing top {items.length} · {((totalShown / Math.max(1, totalAll)) * 100).toFixed(1)}%
             of all tracked requests · 48 h retention
           </div>
@@ -314,7 +314,7 @@ function TrafficByAction({ range, samples }: { range: "1h" | "24h"; samples: any
           <h2 className="text-sm font-semibold tracking-tight">
             Traffic by routing action ({range})
           </h2>
-          <span className="text-xs text-muted dark:text-muted-dark">downlink, bytes/sec</span>
+          <span className="text-muted dark:text-muted-dark text-xs">downlink, bytes/sec</span>
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -334,7 +334,7 @@ function TrafficByAction({ range, samples }: { range: "1h" | "24h"; samples: any
               />
               <Tooltip
                 labelFormatter={(v) => formatTimeShort(Number(v))}
-                formatter={(v: number) => bps(v)}
+                formatter={(v) => bps(Number(v))}
                 contentStyle={{ borderRadius: 8 }}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -357,12 +357,12 @@ function TrafficByAction({ range, samples }: { range: "1h" | "24h"; samples: any
 
       <div className="panel panel-pad">
         <h2 className="mb-1 text-sm font-semibold tracking-tight">Cumulative bytes per tag</h2>
-        <p className="mb-3 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-3 text-xs">
           Since Xray (re)started — total {bytes(totalAll)}
         </p>
         <div className="space-y-2">
           {totalsRow.length === 0 && (
-            <div className="text-sm text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark text-sm">
               Waiting for first stats tick…
             </div>
           )}
@@ -372,11 +372,11 @@ function TrafficByAction({ range, samples }: { range: "1h" | "24h"; samples: any
               <div key={r.tag}>
                 <div className="mb-1 flex items-center justify-between text-xs">
                   <span className="font-mono">{r.tag}</span>
-                  <span className="font-mono text-muted dark:text-muted-dark">
+                  <span className="text-muted dark:text-muted-dark font-mono">
                     {bytes(r.total)} <span className="opacity-50">· {pct.toFixed(0)}%</span>
                   </span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-bg dark:bg-bg-dark">
+                <div className="bg-bg dark:bg-bg-dark h-1.5 overflow-hidden rounded-full">
                   <div
                     className="h-full rounded-full"
                     style={{ width: `${pct}%`, background: colorFor(r.tag, i) }}

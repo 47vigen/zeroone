@@ -32,6 +32,7 @@ import (
 	"github.com/amirrezakm/zeroone/internal/tunnel"
 	"github.com/amirrezakm/zeroone/internal/usage"
 	"github.com/amirrezakm/zeroone/internal/xray"
+	"github.com/amirrezakm/zeroone/internal/xrayinstall"
 )
 
 type Options struct {
@@ -43,6 +44,7 @@ type Options struct {
 	Destinations    *analytics.Aggregator
 	RelayStore      *relay.Store
 	RelaySupervisor *relay.Supervisor
+	XrayInstaller   *xrayinstall.Installer
 }
 
 type Server struct {
@@ -57,6 +59,7 @@ type Server struct {
 	destinations    *analytics.Aggregator
 	relayStore      *relay.Store
 	relaySupervisor *relay.Supervisor
+	xrayInstaller   *xrayinstall.Installer
 }
 
 func NewServer(cfg stack.Config, configPath string, allowApply bool) http.Handler {
@@ -67,7 +70,8 @@ func NewServerWithOptions(cfg stack.Config, configPath string, allowApply bool, 
 	s := &Server{cfg: cfg, configPath: configPath, allowApply: allowApply,
 		metrics: opts.Metrics, events: opts.Events, audit: opts.Audit, snapshots: opts.Snapshots,
 		presence: opts.Presence, destinations: opts.Destinations,
-		relayStore: opts.RelayStore, relaySupervisor: opts.RelaySupervisor}
+		relayStore: opts.RelayStore, relaySupervisor: opts.RelaySupervisor,
+		xrayInstaller: opts.XrayInstaller}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", s.health)
 	mux.HandleFunc("POST /api/test/connect", s.testConnect)
@@ -83,6 +87,15 @@ func NewServerWithOptions(cfg stack.Config, configPath string, allowApply bool, 
 	mux.HandleFunc("GET /api/xray/traffic", s.xrayTraffic)
 	mux.HandleFunc("GET /api/xray/apply-plan", s.xrayApplyPlan)
 	mux.HandleFunc("POST /api/xray/apply", s.xrayApply)
+	mux.HandleFunc("GET /api/xray/version", s.xrayVersion)
+	mux.HandleFunc("GET /api/xray/version/check", s.xrayVersionCheck)
+	mux.HandleFunc("POST /api/xray/update", s.xrayUpdate)
+	mux.HandleFunc("POST /api/xray/update/upload", s.xrayUpdateUpload)
+	mux.HandleFunc("GET /api/xray/update/status", s.xrayUpdateStatus)
+	mux.HandleFunc("POST /api/xray/rollback", s.xrayRollback)
+	mux.HandleFunc("POST /api/xray/reset-to-image", s.xrayResetToImage)
+	mux.HandleFunc("GET /api/xray/update/config", s.xrayUpdateConfigGet)
+	mux.HandleFunc("PUT /api/xray/update/config", s.xrayUpdateConfigPut)
 	mux.HandleFunc("GET /api/failover/decision", s.failoverDecision)
 	mux.HandleFunc("GET /api/failover/history", s.failoverHistory)
 	mux.HandleFunc("PUT /api/failover/mode", s.failoverMode)
@@ -212,16 +225,26 @@ func (s *Server) tokenAuth(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
+		// Read the admin/token list fresh from disk so credentials added
+		// out-of-band (e.g. `zeroone admin add` from the installer) take
+		// effect immediately without a daemon restart. Fail closed when
+		// the config can't be loaded — we never want a transient read
+		// error to open up every endpoint.
+		fresh, err := stack.Load(s.configPath)
+		if err != nil {
+			s.fail(w, http.StatusUnauthorized, fmt.Errorf("login required"))
+			return
+		}
 		// Accept either a valid session cookie or a recognised Bearer token.
 		// During the bootstrap window — admins not yet seeded — we fall back
 		// to the Bearer-only behaviour so the operator can call POST
 		// /api/admins via curl using an existing panel token.
-		if username := auth.SessionFromRequest(r, s.cfg.Panel.SessionSecret); username != "" {
+		if username := auth.SessionFromRequest(r, fresh.Panel.SessionSecret); username != "" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		hashes := make([]string, 0, len(s.cfg.Panel.Tokens))
-		for _, t := range s.cfg.Panel.Tokens {
+		hashes := make([]string, 0, len(fresh.Panel.Tokens))
+		for _, t := range fresh.Panel.Tokens {
 			hashes = append(hashes, t.Hash)
 		}
 		matched, ok := auth.LookupHash(r, hashes)
@@ -229,10 +252,25 @@ func (s *Server) tokenAuth(next http.Handler) http.Handler {
 			s.fail(w, http.StatusUnauthorized, fmt.Errorf("invalid bearer token"))
 			return
 		}
-		if matched == "" && len(s.cfg.Panel.Admins) > 0 {
-			// Admins exist but caller presented no credentials — require login.
-			s.fail(w, http.StatusUnauthorized, fmt.Errorf("login required"))
-			return
+		if matched == "" {
+			if len(fresh.Panel.Admins) > 0 {
+				// Admins exist but caller presented no credentials — require login.
+				s.fail(w, http.StatusUnauthorized, fmt.Errorf("login required"))
+				return
+			}
+			// Bootstrap window: no admins on disk yet. Two narrow open
+			// paths so the panel UI's "Create the first admin" flow
+			// works from any remote browser without leaving the rest of
+			// the API exposed:
+			//   1. POST /api/admins — the create-first-admin call itself.
+			//   2. Loopback callers — so the installer's CLI seeding via
+			//      `docker exec` keeps working unchanged.
+			// Every other endpoint stays locked until an admin exists.
+			isCreateFirstAdmin := r.Method == http.MethodPost && r.URL.Path == "/api/admins"
+			if !isCreateFirstAdmin && !isLoopbackRemote(r) {
+				s.fail(w, http.StatusUnauthorized, fmt.Errorf("login required"))
+				return
+			}
 		}
 		if matched != "" {
 			go s.touchToken(matched)
@@ -241,11 +279,36 @@ func (s *Server) tokenAuth(next http.Handler) http.Handler {
 	})
 }
 
+// isLoopbackRemote reports whether the request originated on the same
+// host as the daemon. Used to gate the bootstrap-open auth path so the
+// install flow keeps working while remote callers stay locked out.
+func isLoopbackRemote(r *http.Request) bool {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	if host == "" {
+		return false
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return host == "localhost"
+	}
+	return ip.IsLoopback()
+}
+
+// touchToken updates the LastUsed timestamp for the given token hash.
+// It reloads from disk + saves so a CLI-added admin or token can't be
+// silently clobbered by an in-memory write of the stale s.cfg.
 func (s *Server) touchToken(hash string) {
-	for i := range s.cfg.Panel.Tokens {
-		if s.cfg.Panel.Tokens[i].Hash == hash {
-			s.cfg.Panel.Tokens[i].LastUsed = time.Now().Unix()
-			_ = stack.Save(s.configPath, s.cfg)
+	cfg, err := stack.Load(s.configPath)
+	if err != nil {
+		return
+	}
+	for i := range cfg.Panel.Tokens {
+		if cfg.Panel.Tokens[i].Hash == hash {
+			cfg.Panel.Tokens[i].LastUsed = time.Now().Unix()
+			_ = stack.Save(s.configPath, *cfg)
 			return
 		}
 	}
@@ -476,6 +539,11 @@ func (s *Server) failoverMode(w http.ResponseWriter, r *http.Request) {
 	priorMode := failover.CurrentMode(cfg)
 	priorFailoverMode := cfg.Failover.EffectiveMode()
 	priorPreferredTunnel := cfg.Failover.PreferredTunnel
+	autoTitle := fmt.Sprintf("Failover → %s", req.Mode)
+	if req.PreferredTunnel != "" {
+		autoTitle += " (" + req.PreferredTunnel + ")"
+	}
+	s.autoSnapshot(s.actor(r), "failover.mode.set", autoTitle)
 	if err := cfg.SetFailoverMode(req.Mode, req.PreferredTunnel); err != nil {
 		s.fail(w, http.StatusBadRequest, err)
 		return
@@ -737,6 +805,7 @@ func (s *Server) upsertClientEndpoint(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, http.StatusBadRequest, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "client_endpoint.upsert", fmt.Sprintf("Client endpoint upsert: %s", req.Name))
 	if err := stack.Save(s.configPath, cfg); err != nil {
 		s.fail(w, http.StatusBadRequest, err)
 		return
@@ -756,6 +825,7 @@ func (s *Server) deleteClientEndpoint(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, http.StatusBadRequest, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "client_endpoint.delete", fmt.Sprintf("Client endpoint delete: %s", name))
 	if err := stack.Save(s.configPath, cfg); err != nil {
 		s.fail(w, http.StatusBadRequest, err)
 		return
@@ -980,8 +1050,23 @@ func (s *Server) xrayApply(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	// Title comes from the panel's Apply dialog. Body is optional (curl
+	// users may POST without one) so we fall back to a generic default
+	// rather than rejecting the request.
+	var req struct {
+		Title string `json:"title"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	title := strings.TrimSpace(req.Title)
+	if title == "" {
+		title = "Apply Xray config"
+	}
 	if s.snapshots != nil {
-		if _, err := s.snapshots.Capture(s.configPath, cfg.Server.XrayConfigPath); err != nil {
+		if _, err := s.snapshots.Capture(s.configPath, cfg.Server.XrayConfigPath, snapshots.Info{
+			Title:  title,
+			Source: snapshots.SourceManual,
+			Action: "xray.apply",
+		}); err != nil {
 			// Non-fatal: capture failure shouldn't block apply.
 			s.recordAudit(s.actor(r), "snapshot.error", "", map[string]any{"error": err.Error()})
 		}
@@ -992,7 +1077,7 @@ func (s *Server) xrayApply(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 500, err)
 		return
 	}
-	s.recordAudit(s.actor(r), "xray.apply", "", map[string]any{"changed": plan.Changed, "backup_path": plan.BackupPath})
+	s.recordAudit(s.actor(r), "xray.apply", "", map[string]any{"changed": plan.Changed, "backup_path": plan.BackupPath, "title": title})
 	s.write(w, map[string]any{"ok": true, "plan": plan})
 }
 
@@ -1073,6 +1158,7 @@ func (s *Server) quotaApply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	plan := enforce.PlanQuota(s.cfg, state, time.Now())
+	s.autoSnapshot(s.actor(r), "quota.apply", fmt.Sprintf("Quota apply (%d actions)", len(plan.Actions)))
 	next := s.cfg
 	if err := enforce.ApplyQuotaPlan(&next, plan); err != nil {
 		s.fail(w, 500, err)
@@ -1101,6 +1187,7 @@ func (s *Server) bandwidthApply(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, http.StatusForbidden, fmt.Errorf("bandwidth apply is disabled; start with -allow-apply"))
 		return
 	}
+	s.autoSnapshot(s.actor(r), "bandwidth.apply", "Bandwidth apply")
 	result, err := (bandwidth.Manager{}).Apply(r.Context(), s.cfg)
 	if err != nil {
 		s.fail(w, 500, err)
@@ -1372,6 +1459,7 @@ func (s *Server) addDirectDomain(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "rule.direct.add", fmt.Sprintf("Direct domain add: %s", req.Domain))
 	if !s.save(w) {
 		return
 	}
@@ -1390,6 +1478,7 @@ func (s *Server) deleteDirectDomain(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "rule.direct.delete", fmt.Sprintf("Direct domain delete: %s", domain))
 	if !s.save(w) {
 		return
 	}
@@ -1428,6 +1517,7 @@ func (s *Server) addSOCKS(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "socks.create", fmt.Sprintf("SOCKS create: %s", req.Name))
 	if !s.save(w) {
 		return
 	}
@@ -1456,6 +1546,7 @@ func (s *Server) updateSOCKS(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "socks.update", fmt.Sprintf("SOCKS update: %s", req.Username))
 	if !s.save(w) {
 		return
 	}
@@ -1469,6 +1560,7 @@ func (s *Server) deleteSOCKS(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 404, err)
 		return
 	}
+	s.autoSnapshot(s.actor(r), "socks.delete", fmt.Sprintf("SOCKS delete: %s", username))
 	if !s.save(w) {
 		return
 	}

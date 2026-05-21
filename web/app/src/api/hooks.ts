@@ -122,7 +122,7 @@ export function useBandwidthPlan() {
 export function useApplyXray() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => post("/api/xray/apply"),
+    mutationFn: (title: string) => post("/api/xray/apply", { title }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["apply-plan"] });
       qc.invalidateQueries({ queryKey: ["summary"] });
@@ -143,7 +143,8 @@ export function useSyncUsage() {
 export function useRollback() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => post(`/api/snapshots/rollback?id=${encodeURIComponent(id)}`),
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      post(`/api/snapshots/rollback?id=${encodeURIComponent(id)}`, { title }),
     onSuccess: () => qc.invalidateQueries(),
   });
 }
@@ -263,7 +264,8 @@ export function useApplyBandwidth() {
 export function useCreateSnapshot() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => post<{ ok: boolean; snapshot: SnapshotInfo }>("/api/snapshots"),
+    mutationFn: (title: string) =>
+      post<{ ok: boolean; snapshot: SnapshotInfo }>("/api/snapshots", { title }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["snapshots"] }),
   });
 }
