@@ -59,9 +59,9 @@ const (
 	DefaultRelaySOCKSPort   = 8086
 	DefaultRelayOutboundTag = "relay-mhrv"
 	DefaultRelayBinary      = "/usr/local/bin/mhrv-rs"
-	DefaultRelayConfigPath  = "/var/lib/xray-stack/relay/config.json"
-	DefaultRelayStatePath   = "/var/lib/xray-stack/relay/state.json"
-	DefaultRelayLogPath     = "/var/lib/xray-stack/relay/relay.log"
+	DefaultRelayConfigPath  = "/var/lib/zeroone/relay/config.json"
+	DefaultRelayStatePath   = "/var/lib/zeroone/relay/state.json"
+	DefaultRelayLogPath     = "/var/lib/zeroone/relay/relay.log"
 	DefaultRelayHealthProbe = "www.google.com:443"
 	DefaultRelayGoogleIP    = "216.239.38.120"
 	DefaultRelayFrontDomain = "www.google.com"
@@ -350,9 +350,9 @@ type TunnelConfig struct {
 // FailoverMode controls how the failover loop picks an active tunnel.
 //   - "" / "auto"     — health-based, walks Tunnels in order
 //   - "manual"        — pin to PreferredTunnel; drift only if it goes unhealthy
-//                       (does not auto-return when it recovers; user re-picks)
+//     (does not auto-return when it recovers; user re-picks)
 //   - "preferred"     — same as manual but auto-returns to PreferredTunnel
-//                       once it becomes healthy again
+//     once it becomes healthy again
 const (
 	FailoverModeAuto      = "auto"
 	FailoverModeManual    = "manual"

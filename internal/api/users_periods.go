@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/usage"
+	"github.com/amirrezakm/zeroone/internal/usage"
 )
 
 func (s *Server) setUserPeriods(w http.ResponseWriter, r *http.Request) {

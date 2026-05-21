@@ -1,0 +1,452 @@
+name: Release
+
+# Fully automatic releases. On every merge to main this workflow:
+#   1. Parses Conventional Commits since the last vX.Y.Z tag and decides
+#      the next semver (feat→minor, fix/perf/revert→patch, BREAKING→major).
+#   2. If there's nothing release-worthy (only docs/chore/ci/style/test/
+#      refactor/build), it exits without cutting a release.
+#   3. Otherwise: updates CHANGELOG.md, commits it, tags, pushes the tag,
+#      builds + pushes the multi-arch image to GHCR, builds linux
+#      tarballs (amd64/arm64), and publishes a GitHub release with them.
+#
+# Trigger Conventional Commits with the PR title — squash-merging uses
+# the title as the commit subject.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_version:
+        description: "Force a specific version (e.g. 0.2.0). Leave blank to compute from commits."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------
+  # 1. Compute the next version from Conventional Commits since last tag.
+  # ---------------------------------------------------------------------
+  plan:
+    name: Plan release
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.bump.outputs.should_release }}
+      next_tag:       ${{ steps.bump.outputs.next_tag }}
+      next_version:   ${{ steps.bump.outputs.next_version }}
+      prev_tag:       ${{ steps.bump.outputs.prev_tag }}
+      bump_kind:      ${{ steps.bump.outputs.bump_kind }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: compute next semver
+        id: bump
+        env:
+          FORCE_VERSION: ${{ inputs.force_version }}
+        run: |
+          set -euo pipefail
+
+          PREV_TAG=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)
+          if [ -z "${PREV_TAG}" ]; then
+            PREV_TAG="v0.0.0"
+            RANGE_REF="HEAD"
+            BASE_DESC="initial release"
+          else
+            RANGE_REF="${PREV_TAG}..HEAD"
+            BASE_DESC="${PREV_TAG}..HEAD"
+          fi
+          echo "Previous tag: ${PREV_TAG}"
+          echo "Inspecting commits in ${BASE_DESC}"
+
+          CUR=${PREV_TAG#v}
+          MAJOR=${CUR%%.*}; REST=${CUR#*.}
+          MINOR=${REST%%.*}; PATCH=${REST#*.}
+
+          if [ -n "${FORCE_VERSION}" ]; then
+            NEXT="v${FORCE_VERSION}"
+            BUMP="forced"
+            echo "Forced version: ${NEXT}"
+          else
+            if [ "${RANGE_REF}" = "HEAD" ]; then
+              COMMITS=$(git log HEAD --pretty=format:'%s%n%b%n---END---')
+            else
+              COMMITS=$(git log "${RANGE_REF}" --pretty=format:'%s%n%b%n---END---')
+            fi
+
+            if [ -z "${COMMITS}" ]; then
+              echo "No commits since ${PREV_TAG}; nothing to release."
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            BUMP=""
+            # BREAKING CHANGE in body, or "!" before colon in subject.
+            if echo "${COMMITS}" | grep -qE '^[a-zA-Z]+(\([^)]+\))?!:|BREAKING[ -]CHANGE'; then
+              BUMP=major
+            elif echo "${COMMITS}" | grep -qE '^feat(\([^)]+\))?:'; then
+              BUMP=minor
+            elif echo "${COMMITS}" | grep -qE '^(fix|perf|revert)(\([^)]+\))?:'; then
+              BUMP=patch
+            fi
+
+            if [ -z "${BUMP}" ]; then
+              echo "No release-triggering commits (only docs/chore/ci/style/test/refactor/build). Skipping."
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            # First release bootstrap: v0.0.0 → v0.1.0 regardless of bump
+            # type, since 0.0.x has no semantic meaning for a public release.
+            if [ "${PREV_TAG}" = "v0.0.0" ]; then
+              MAJOR=0; MINOR=1; PATCH=0
+            else
+              case "${BUMP}" in
+                major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+                minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+                patch) PATCH=$((PATCH+1)) ;;
+              esac
+            fi
+            NEXT="v${MAJOR}.${MINOR}.${PATCH}"
+            echo "Bump: ${BUMP} → ${NEXT}"
+          fi
+
+          {
+            echo "should_release=true"
+            echo "next_tag=${NEXT}"
+            echo "next_version=${NEXT#v}"
+            echo "prev_tag=${PREV_TAG}"
+            echo "bump_kind=${BUMP}"
+          } >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------
+  # 2. Tag + update CHANGELOG. Single source of truth for the release.
+  # ---------------------------------------------------------------------
+  tag:
+    name: Tag + changelog
+    needs: plan
+    if: needs.plan.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      release_notes: ${{ steps.notes.outputs.release_notes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: render release notes
+        id: notes
+        env:
+          NEXT_TAG: ${{ needs.plan.outputs.next_tag }}
+          PREV_TAG: ${{ needs.plan.outputs.prev_tag }}
+        run: |
+          set -euo pipefail
+          if [ "${PREV_TAG}" = "v0.0.0" ]; then
+            RANGE_REF="HEAD"
+          else
+            RANGE_REF="${PREV_TAG}..HEAD"
+          fi
+
+          sections() {
+            local pattern="$1" header="$2"
+            local out
+            if [ "${RANGE_REF}" = "HEAD" ]; then
+              out=$(git log HEAD --pretty=format:'%s|%h' | grep -E "${pattern}" || true)
+            else
+              out=$(git log "${RANGE_REF}" --pretty=format:'%s|%h' | grep -E "${pattern}" || true)
+            fi
+            if [ -n "${out}" ]; then
+              printf '\n### %s\n\n' "${header}"
+              echo "${out}" | sed -E "s/^[a-zA-Z]+(\([^)]+\))?!?:[ ]*//" | awk -F'|' '{printf "- %s (%s)\n", $1, $2}'
+            fi
+          }
+
+          NOTES=$(mktemp)
+          {
+            printf '## %s — %s\n' "${NEXT_TAG}" "$(date -u +%Y-%m-%d)"
+            sections '^[a-zA-Z]+(\([^)]+\))?!:'           '⚠ Breaking Changes'
+            sections '^feat(\([^)]+\))?:'                 'Features'
+            sections '^fix(\([^)]+\))?:'                  'Bug Fixes'
+            sections '^perf(\([^)]+\))?:'                 'Performance'
+            sections '^revert(\([^)]+\))?:'               'Reverts'
+            sections '^docs(\([^)]+\))?:'                 'Documentation'
+            sections '^refactor(\([^)]+\))?:'             'Refactoring'
+            sections '^build(\([^)]+\))?:'                'Build'
+            sections '^ci(\([^)]+\))?:'                   'CI'
+          } > "${NOTES}"
+
+          # Multiline output
+          {
+            echo "release_notes<<__NOTES_EOF__"
+            cat "${NOTES}"
+            echo "__NOTES_EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: prepend CHANGELOG.md
+        env:
+          NEXT_TAG: ${{ needs.plan.outputs.next_tag }}
+          NOTES: ${{ steps.notes.outputs.release_notes }}
+        run: |
+          set -euo pipefail
+          CHANGELOG=CHANGELOG.md
+          if [ ! -f "${CHANGELOG}" ]; then
+            printf '# Changelog\n\n' > "${CHANGELOG}"
+          fi
+          # Insert new section after the first "# Changelog" header line.
+          tmp=$(mktemp)
+          awk -v notes="${NOTES}" '
+            BEGIN { inserted=0 }
+            /^# Changelog/ && !inserted { print; print ""; print notes; inserted=1; next }
+            { print }
+          ' "${CHANGELOG}" > "${tmp}"
+          mv "${tmp}" "${CHANGELOG}"
+
+      - name: commit, tag, push
+        env:
+          NEXT_TAG: ${{ needs.plan.outputs.next_tag }}
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CHANGELOG.md
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): ${NEXT_TAG} [skip ci]"
+            git push origin main
+          fi
+          git tag -a "${NEXT_TAG}" -m "Release ${NEXT_TAG}"
+          git push origin "${NEXT_TAG}"
+
+  # ---------------------------------------------------------------------
+  # 3. Build & push multi-arch image to GHCR.
+  # ---------------------------------------------------------------------
+  image:
+    name: Build & push multi-arch image
+    needs: [plan, tag]
+    if: needs.plan.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.next_tag }}
+          fetch-tags: true
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: log in to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: extract major/minor
+        id: vparts
+        env:
+          NEXT_VERSION: ${{ needs.plan.outputs.next_version }}
+        run: |
+          MAJOR=${NEXT_VERSION%%.*}
+          REST=${NEXT_VERSION#*.}
+          MINOR=${REST%%.*}
+          echo "major=v${MAJOR}" >> "$GITHUB_OUTPUT"
+          echo "minor=v${MAJOR}.${MINOR}" >> "$GITHUB_OUTPUT"
+      - name: build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ needs.plan.outputs.next_tag }}
+            ghcr.io/${{ github.repository }}:${{ steps.vparts.outputs.minor }}
+            ghcr.io/${{ github.repository }}:${{ steps.vparts.outputs.major }}
+            ghcr.io/${{ github.repository }}:latest
+          build-args: |
+            VERSION=${{ needs.plan.outputs.next_tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ needs.plan.outputs.next_tag }}
+
+  # ---------------------------------------------------------------------
+  # 4. Build linux tarballs (amd64 + arm64).
+  # ---------------------------------------------------------------------
+  archive:
+    name: Build tarball (${{ matrix.arch }})
+    needs: [plan, tag]
+    if: needs.plan.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.next_tag }}
+          fetch-tags: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/app/package-lock.json
+      - name: install ui deps
+        working-directory: web/app
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: build ui
+        working-directory: web/app
+        run: npm run build
+      - name: build daemon
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
+          VERSION: ${{ needs.plan.outputs.next_tag }}
+        run: |
+          mkdir -p dist
+          go build -mod=vendor -trimpath \
+            -ldflags="-s -w -X main.version=${VERSION}" \
+            -o dist/zeroone ./cmd/zeroone
+      - name: package
+        env:
+          VERSION: ${{ needs.plan.outputs.next_tag }}
+          ARCH:    ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          PKG="zeroone-${VERSION}-linux-${ARCH}"
+          mkdir -p "dist/${PKG}"/{bin,ui,config,systemd,docs,scripts}
+          install -m 0755 dist/zeroone                           "dist/${PKG}/bin/zeroone"
+          cp -r web/app/dist/.                                   "dist/${PKG}/ui/"
+          install -m 0644 config/stack.example.json              "dist/${PKG}/config/stack.example.json"
+          install -m 0644 deploy/systemd/zeroone.service         "dist/${PKG}/systemd/zeroone.service"
+          install -m 0644 deploy/skeleton/xray.service           "dist/${PKG}/systemd/xray.service"
+          install -m 0644 deploy/DEPLOY.md                       "dist/${PKG}/docs/DEPLOY.md"
+          install -m 0644 README.md LICENSE CHANGELOG.md         "dist/${PKG}/"
+          install -m 0755 scripts/install.sh                     "dist/${PKG}/scripts/install.sh"
+          tar -C dist -czf "dist/${PKG}.tar.gz" "${PKG}"
+          (cd dist && sha256sum "${PKG}.tar.gz" > "${PKG}.tar.gz.sha256")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tarball-${{ matrix.arch }}
+          path: |
+            dist/zeroone-*.tar.gz
+            dist/zeroone-*.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+  # ---------------------------------------------------------------------
+  # 5. Build offline install bundles (amd64 + arm64) for air-gapped /
+  #    Iranian deployments. Pulls the image we just pushed from GHCR,
+  #    saves it, and packages it with the compose file + installer so
+  #    operators can `tar -xzf` + `sudo bash install-offline.sh` on a
+  #    server with no registry egress. See docs/OFFLINE-INSTALL.md.
+  # ---------------------------------------------------------------------
+  offline-bundle:
+    name: Build offline bundle (${{ matrix.arch }})
+    needs: [plan, tag, image]
+    if: needs.plan.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.next_tag }}
+          fetch-tags: true
+      - name: log in to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: build offline bundle
+        env:
+          ZEROONE_VERSION:   ${{ needs.plan.outputs.next_tag }}
+          ZEROONE_ARCH:      ${{ matrix.arch }}
+          ZEROONE_REPO:      ${{ github.repository }}
+          # Pull directly from the image we just pushed in the previous
+          # job — the runner has GHCR access. Operators running this
+          # script themselves default to the Runflare Docker mirror.
+          ZEROONE_IMAGE_SRC: ghcr.io/${{ github.repository }}
+        run: bash scripts/offline-bundle.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline-bundle-${{ matrix.arch }}
+          path: |
+            dist/zeroone-offline-*.tar.gz
+            dist/zeroone-offline-*.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+  # ---------------------------------------------------------------------
+  # 6. Publish the GitHub release with assets.
+  # ---------------------------------------------------------------------
+  publish:
+    name: Publish GitHub release
+    needs: [plan, tag, image, archive, offline-bundle]
+    if: needs.plan.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.next_tag }}
+          fetch-tags: true
+      - name: download daemon tarballs
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: tarball-*
+          merge-multiple: true
+      - name: download offline bundles
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: offline-bundle-*
+          merge-multiple: true
+      - name: create release
+        env:
+          GH_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          NEXT_TAG:      ${{ needs.plan.outputs.next_tag }}
+          RELEASE_NOTES: ${{ needs.tag.outputs.release_notes }}
+        run: |
+          set -euo pipefail
+          NOTES_FILE=$(mktemp)
+          {
+            echo "${RELEASE_NOTES}"
+            echo
+            echo "### Container image"
+            echo
+            echo "\`\`\`bash"
+            echo "docker pull ghcr.io/${GITHUB_REPOSITORY}:${NEXT_TAG}"
+            echo "\`\`\`"
+            echo
+            echo "### Offline / air-gapped install (Iran)"
+            echo
+            echo "Download \`zeroone-offline-${NEXT_TAG}-<arch>.tar.gz\` below, SFTP it to your destination server, and run:"
+            echo
+            echo "\`\`\`bash"
+            echo "tar -xzf zeroone-offline-${NEXT_TAG}-amd64.tar.gz"
+            echo "sudo bash install-offline.sh"
+            echo "\`\`\`"
+            echo
+            echo "See [\`docs/OFFLINE-INSTALL.md\`](https://github.com/${GITHUB_REPOSITORY}/blob/${NEXT_TAG}/docs/OFFLINE-INSTALL.md) for the full guide."
+          } > "${NOTES_FILE}"
+          gh release create "${NEXT_TAG}" \
+            --title "${NEXT_TAG}" \
+            --notes-file "${NOTES_FILE}" \
+            dist/*.tar.gz dist/*.tar.gz.sha256

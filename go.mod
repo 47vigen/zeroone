@@ -1,4 +1,4 @@
-module github.com/sakhtar/xray-stack-zeroone
+module github.com/amirrezakm/zeroone
 
 go 1.25.6
 

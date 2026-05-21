@@ -23,8 +23,8 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/events"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/events"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 type Notifier struct {
@@ -126,7 +126,7 @@ func (n *Notifier) sendWebhook(ctx context.Context, sink stack.WebhookSink, ev e
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "xray-stackd-notifier/1")
+	req.Header.Set("User-Agent", "zeroone-notifier/1")
 	if sink.Secret != "" {
 		mac := hmac.New(sha256.New, []byte(sink.Secret))
 		mac.Write(body)

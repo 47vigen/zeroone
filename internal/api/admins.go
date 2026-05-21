@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/auth"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/auth"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 // ensureSessionSecret persists a session-signing secret in the panel

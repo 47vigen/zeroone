@@ -4,7 +4,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 type Object = map[string]any

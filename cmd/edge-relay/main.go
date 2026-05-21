@@ -92,7 +92,7 @@ func loadConfig() (config, error) {
 	}
 
 	// /sub/ and /me/ go through the panel's subscription + portal handlers
-	// at the same nginx :80 used by xhttp, then nginx proxies to xray-stackd
+	// at the same nginx :80 used by xhttp, then nginx proxies to zeroone
 	// on 127.0.0.1:8091.
 	panelTarget := os.Getenv("PANEL_TARGET")
 	if panelTarget == "" && originHost != "" {
@@ -116,13 +116,13 @@ func loadConfig() (config, error) {
 			}
 			label, rest, ok := strings.Cut(spec, ":")
 			if !ok {
-				return config{}, fmt.Errorf("EDGE_EXTRA_ROUTES entry %q missing label:", spec)
+				return config{}, fmt.Errorf("EDGE_EXTRA_ROUTES entry %q missing label", spec)
 			}
 			pathPart, targetPart, ok := strings.Cut(rest, "=")
 			if !ok {
 				return config{}, fmt.Errorf("EDGE_EXTRA_ROUTES entry %q missing =", spec)
 			}
-			target, hostOverride := pathPart, ""
+			var target, hostOverride string
 			if t, h, ok := strings.Cut(targetPart, ",Host="); ok {
 				target, hostOverride = t, h
 			} else {

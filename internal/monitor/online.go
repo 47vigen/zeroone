@@ -7,11 +7,10 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/system"
+	"github.com/amirrezakm/zeroone/internal/system"
 )
 
 type OnlineUser struct {
@@ -266,9 +265,4 @@ func countEstablished(ctx context.Context, port int) int {
 		}
 	}
 	return count
-}
-
-func atoi(s string) int {
-	n, _ := strconv.Atoi(s)
-	return n
 }

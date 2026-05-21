@@ -1,0 +1,46 @@
+version: "2"
+
+# Lean correctness + security gate. Style is handled by gofmt (run in CI).
+# Add more linters incrementally as the codebase warrants.
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - nilerr
+    - staticcheck
+    - unused
+  settings:
+    staticcheck:
+      checks:
+        - all
+        - "-ST1000" # missing package comment — too noisy to enforce repo-wide
+        - "-ST1003" # initialisms (IP, ID, URL) — false positives on our JSON tags
+        - "-ST1020" # exported-fn-comment-must-start-with-name
+        - "-ST1021" # exported-type-comment-must-start-with-name
+        - "-QF1008" # could remove embedded field — stylistic
+        - "-QF1011" # type can be inferred — stylistic
+    errcheck:
+      exclude-functions:
+        - (*os.File).Close
+        - (io.Closer).Close
+        - fmt.Fprintln
+        - fmt.Fprintf
+        - fmt.Fprint
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters: [errcheck, gosec]
+      - path: vendor/
+        linters: [errcheck, govet, ineffassign, nilerr, staticcheck, unused]
+
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0

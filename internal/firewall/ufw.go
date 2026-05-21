@@ -7,10 +7,10 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/system"
+	"github.com/amirrezakm/zeroone/internal/system"
 )
 
-const ruleComment = "xray-stack bandwidth-limited"
+const ruleComment = "zeroone bandwidth-limited"
 
 type UFW struct {
 	Runner system.Runner
@@ -23,11 +23,18 @@ func (u UFW) runner() system.Runner {
 	return system.ExecRunner{Timeout: 10 * time.Second}
 }
 
+// ufwAvailable reports whether the ufw binary is installed. Absence is
+// treated as a no-op by Allow/Delete — the host simply doesn't use ufw.
+func ufwAvailable() bool {
+	_, err := exec.LookPath("ufw")
+	return err == nil
+}
+
 func (u UFW) Allow(ctx context.Context, port int) error {
 	if port <= 0 || port > 65535 {
 		return fmt.Errorf("invalid port %d", port)
 	}
-	if _, err := exec.LookPath("ufw"); err != nil {
+	if !ufwAvailable() {
 		return nil
 	}
 	res, err := u.runner().Run(ctx, "ufw", "allow", fmt.Sprintf("%d/tcp", port), "comment", ruleComment)
@@ -41,7 +48,7 @@ func (u UFW) Delete(ctx context.Context, port int) error {
 	if port <= 0 || port > 65535 {
 		return fmt.Errorf("invalid port %d", port)
 	}
-	if _, err := exec.LookPath("ufw"); err != nil {
+	if !ufwAvailable() {
 		return nil
 	}
 	res, err := u.runner().Run(ctx, "ufw", "delete", "allow", fmt.Sprintf("%d/tcp", port))

@@ -3,7 +3,7 @@
     "public_ip": "203.0.113.1",
     "client_endpoints": [
       {
-        "name": "pars-pack",
+        "name": "primary-edge",
         "host": "edge.example.com",
         "port": 443,
         "network": "xhttp",
@@ -22,8 +22,8 @@
         "link_compat": true
       },
       {
-        "name": "runflare-ws",
-        "host": "your-app.runflare.run",
+        "name": "paas-edge-ws",
+        "host": "your-app.example-paas.run",
         "port": 443,
         "network": "ws",
         "path": "/vless",
@@ -31,8 +31,8 @@
         "enabled": false
       },
       {
-        "name": "runflare-xhttp",
-        "host": "your-app.runflare.run",
+        "name": "paas-edge-xhttp",
+        "host": "your-app.example-paas.run",
         "port": 443,
         "network": "xhttp",
         "path": "/api/v1/events",
@@ -56,19 +56,19 @@
     "backup_dir": "/root/xray-audit-backups",
     "user_usage_path": "/usr/local/etc/xray/user-usage.json",
     "socks_usage_path": "/usr/local/etc/xray/socks-usage.json",
-    "ui_path": "/usr/local/share/xray-stack-ui",
+    "ui_path": "/usr/local/share/zeroone-ui",
     "bandwidth_device": "eth0",
     "bandwidth_config_path": "/usr/local/etc/xray/bandwidth-limits.json",
-    "failover_state_path": "/var/lib/xray-stack/failover-state.json"
+    "failover_state_path": "/var/lib/zeroone/failover-state.json"
   },
   "xray": {
     "log_level": "warning",
     "dns_servers": [
-      "217.218.155.155"
+      "198.51.100.53"
     ],
     "dns_hosts": {
-      "edge.velamkon.lol": [
-        "172.64.155.209"
+      "edge.example.com": [
+        "198.51.100.20"
       ]
     },
     "api_port": 10085,
@@ -109,11 +109,11 @@
       "proxy": {
         "tag": "proxy",
         "type": "vless-ws-tls",
-        "address": "172.64.155.209",
+        "address": "198.51.100.20",
         "port": 443,
         "uuid": "00000000-0000-4000-8000-000000000000",
-        "server_name": "edge.velamkon.lol",
-        "host": "edge.velamkon.lol",
+        "server_name": "edge.example.com",
+        "host": "edge.example.com",
         "path": "/edge",
         "interface": "tun0",
         "mux_concurrency": 16
@@ -121,18 +121,18 @@
       "fallback": {
         "tag": "priority-proxy",
         "type": "vless-ws",
-        "address": "185.143.232.253",
+        "address": "198.51.100.30",
         "port": 80,
         "uuid": "00000000-0000-4000-8000-000000000000",
-        "host": "dl3.farsdroid.site",
+        "host": "fallback.example.com",
         "path": "/"
       }
     },
     "routing": {
       "block_udp_443": true,
       "direct_domains": [
-        "full:chat.snappgrocery.net",
-        "domain:chat.snappgrocery.net"
+        "full:chat.example.com",
+        "domain:chat.example.com"
       ],
       "direct_ips": [
         "203.0.113.1/32"
@@ -170,19 +170,19 @@
   ],
   "failover": {
     "enabled": true,
-    "probe_ip": "172.64.155.209",
+    "probe_ip": "198.51.100.20",
     "probe_port": 443,
     "probes": [
       {
-        "address": "172.64.155.209",
+        "address": "198.51.100.20",
         "port": 443
       },
       {
-        "address": "104.18.32.47",
+        "address": "198.51.100.21",
         "port": 443
       },
       {
-        "address": "162.159.140.245",
+        "address": "198.51.100.22",
         "port": 443
       }
     ],

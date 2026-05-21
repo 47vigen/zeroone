@@ -3,7 +3,7 @@ package xray
 import (
 	"testing"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 func TestGenerateAddsLimitedInbound(t *testing.T) {

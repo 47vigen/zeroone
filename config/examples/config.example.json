@@ -4,13 +4,13 @@
   },
   "dns": {
     "hosts": {
-      "edge.velamkon.lol": [
-        "172.64.155.209"
+      "edge.example.com": [
+        "198.51.100.20"
       ]
     },
     "queryStrategy": "UseIPv4",
     "servers": [
-      "217.218.155.155"
+      "198.51.100.53"
     ]
   },
   "inbounds": [
@@ -201,7 +201,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "172.64.155.209",
+            "address": "198.51.100.20",
             "port": 443,
             "users": [
               {
@@ -216,12 +216,12 @@
         "network": "ws",
         "security": "tls",
         "tlsSettings": {
-          "serverName": "edge.velamkon.lol",
+          "serverName": "edge.example.com",
           "fingerprint": "chrome"
         },
         "wsSettings": {
           "path": "/edge",
-          "host": "edge.velamkon.lol"
+          "host": "edge.example.com"
         },
         "sockopt": {
           "interface": "tun1"
@@ -240,7 +240,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "185.143.232.253",
+            "address": "198.51.100.30",
             "port": 80,
             "users": [
               {
@@ -256,7 +256,7 @@
         "security": "none",
         "wsSettings": {
           "path": "/",
-          "host": "dl3.farsdroid.site"
+          "host": "fallback.example.com"
         }
       }
     },
@@ -296,15 +296,15 @@
       {
         "type": "field",
         "domain": [
-          "full:chat.snappgrocery.net",
-          "domain:chat.snappgrocery.net"
+          "full:chat.example.com",
+          "domain:chat.example.com"
         ],
         "outboundTag": "direct"
       },
       {
         "type": "field",
         "ip": [
-          "203.0.113.1/32"
+          "203.0.113.10/32"
         ],
         "outboundTag": "direct"
       },
@@ -331,18 +331,18 @@
           "domain:bazaar.ir",
           "domain:blubank.com",
           "domain:cafebazaar.com",
-          "domain:dify.sakhtar.tech",
+          "domain:dify.example.com",
           "domain:digikala.com",
           "domain:fidibo.com",
           "domain:filimo.com",
           "domain:namava.com",
           "domain:namava.ir",
-          "domain:sakhtar.tech",
+          "domain:example.com",
           "domain:sheypoor.com",
           "domain:snapp.cab",
           "domain:snapp.ir",
           "domain:snapp.taxi",
-          "domain:snappgrocery.net",
+          "domain:example.com",
           "domain:tapsi.cab",
           "domain:torob.com",
           "domain:varzesh3.com"

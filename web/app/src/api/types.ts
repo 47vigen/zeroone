@@ -1,9 +1,9 @@
 export type Link = { name: string; url: string };
 
 export type PortalURL = {
-  host: string;   // base, e.g. https://edge.example.com
+  host: string; // base, e.g. https://edge.example.com
   portal: string; // <host>/me/<sub_token>
-  sub: string;    // <host>/sub/<sub_token>
+  sub: string; // <host>/sub/<sub_token>
 };
 
 export type UserItem = {
@@ -55,9 +55,9 @@ export type ClientEndpoint = {
   name: string;
   host: string;
   port: number;
-  network: 'ws' | 'xhttp';
+  network: "ws" | "xhttp";
   path: string;
-  mode?: 'auto' | 'packet-up' | 'stream-up' | 'stream-one';
+  mode?: "auto" | "packet-up" | "stream-up" | "stream-one";
   tls: boolean;
   enabled: boolean;
 };
@@ -134,7 +134,7 @@ export type SystemInfo = {
 };
 
 export type FailoverMode = { outbound_tag: string; interface?: string };
-export type FailoverModeName = 'auto' | 'manual' | 'preferred';
+export type FailoverModeName = "auto" | "manual" | "preferred";
 export type FailoverDecision = {
   checks: TunnelHealth[];
   decision: {
@@ -161,7 +161,13 @@ export type ApplyPlan = {
 
 export type QuotaPlan = {
   generated_at: number;
-  actions: { email: string; used_bytes: number; quota_bytes: number; action: string; reason: string }[];
+  actions: {
+    email: string;
+    used_bytes: number;
+    quota_bytes: number;
+    action: string;
+    reason: string;
+  }[];
 };
 
 export type BandwidthPlan = {

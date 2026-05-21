@@ -1,23 +1,23 @@
-import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { Route, Routes } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
-import { ToastProvider } from './components/Toast';
-import { useEventStream } from './api/events';
-import { useSummary } from './api/hooks';
-import { useMe } from './api/auth';
-import Overview from './pages/Overview';
-import Analytics from './pages/Analytics';
-import Users from './pages/Users';
-import Rules from './pages/Rules';
-import RoutesPage from './pages/Routes';
-import Tunnels from './pages/Tunnels';
-import Logs from './pages/Logs';
-import Snapshots from './pages/Snapshots';
-import Plugins from './pages/Plugins';
-import Settings from './pages/Settings';
-import Login from './pages/Login';
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Route, Routes } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import Topbar from "./components/Topbar";
+import { ToastProvider } from "./components/Toast";
+import { useEventStream } from "./api/events";
+import { useSummary } from "./api/hooks";
+import { useMe } from "./api/auth";
+import Overview from "./pages/Overview";
+import Analytics from "./pages/Analytics";
+import Users from "./pages/Users";
+import Rules from "./pages/Rules";
+import RoutesPage from "./pages/Routes";
+import Tunnels from "./pages/Tunnels";
+import Logs from "./pages/Logs";
+import Snapshots from "./pages/Snapshots";
+import Plugins from "./pages/Plugins";
+import Settings from "./pages/Settings";
+import Login from "./pages/Login";
 
 export default function App() {
   return (
@@ -32,18 +32,19 @@ function AuthGate() {
   const qc = useQueryClient();
 
   useEffect(() => {
-    const handler = () => qc.invalidateQueries({ queryKey: ['me'] });
-    window.addEventListener('xray:auth-required', handler);
-    return () => window.removeEventListener('xray:auth-required', handler);
+    const handler = () => qc.invalidateQueries({ queryKey: ["me"] });
+    window.addEventListener("xray:auth-required", handler);
+    return () => window.removeEventListener("xray:auth-required", handler);
   }, [qc]);
 
   // While the auth check is loading we show nothing rather than flashing
   // the login form on every reload of an already-authenticated session.
   if (me.isLoading) {
-    return <div className="min-h-full grid place-items-center text-xs text-muted">Loading…</div>;
+    return <div className="grid min-h-full place-items-center text-xs text-muted">Loading…</div>;
   }
   const data = me.data;
-  const authed = !!data && (data.auth === 'session' || (data.auth === 'token' && !data.bootstrap_needed));
+  const authed =
+    !!data && (data.auth === "session" || (data.auth === "token" && !data.bootstrap_needed));
   // Bootstrap (no admins yet) is treated as authed so the operator can
   // reach Settings → Admins via their existing Bearer cookie/header and
   // seed the first admin without being trapped on the login screen.
@@ -55,7 +56,7 @@ function AuthGate() {
       <Login
         bootstrapNeeded={false}
         onLoggedIn={() => {
-          qc.invalidateQueries({ queryKey: ['me'] });
+          qc.invalidateQueries({ queryKey: ["me"] });
         }}
       />
     );
@@ -69,9 +70,9 @@ function Inner() {
   return (
     <div className="flex h-full">
       <Sidebar publicIP={summary?.public_ip} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col">
         <Topbar publicIP={summary?.public_ip} />
-        <main className="flex-1 overflow-y-auto px-4 lg:px-6 py-5">
+        <main className="flex-1 overflow-y-auto px-4 py-5 lg:px-6">
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/analytics" element={<Analytics />} />

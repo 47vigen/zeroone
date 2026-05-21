@@ -1,10 +1,16 @@
-import { useState } from 'react';
-import { KeyRound, LogIn, ShieldAlert } from 'lucide-react';
-import { login } from '../api/auth';
+import { useState } from "react";
+import { KeyRound, LogIn, ShieldAlert } from "lucide-react";
+import { login } from "../api/auth";
 
-export default function Login({ onLoggedIn, bootstrapNeeded }: { onLoggedIn: () => void; bootstrapNeeded: boolean }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+export default function Login({
+  onLoggedIn,
+  bootstrapNeeded,
+}: {
+  onLoggedIn: () => void;
+  bootstrapNeeded: boolean;
+}) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,22 +22,21 @@ export default function Login({ onLoggedIn, bootstrapNeeded }: { onLoggedIn: () 
       await login(username.trim(), password);
       onLoggedIn();
     } catch (err: any) {
-      setError(err?.message || 'Login failed');
+      setError(err?.message || "Login failed");
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <div className="min-h-full flex items-center justify-center p-6 bg-bg dark:bg-bg-dark">
-      <form
-        onSubmit={submit}
-        className="panel panel-pad w-full max-w-sm shadow-lg"
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <div className="rounded-lg bg-accent/10 text-accent p-2"><KeyRound size={18} /></div>
+    <div className="flex min-h-full items-center justify-center bg-bg p-6 dark:bg-bg-dark">
+      <form onSubmit={submit} className="panel panel-pad w-full max-w-sm shadow-lg">
+        <div className="mb-4 flex items-center gap-2">
+          <div className="rounded-lg bg-accent/10 p-2 text-accent">
+            <KeyRound size={18} />
+          </div>
           <div>
-            <h1 className="font-semibold text-lg leading-tight">Xray Stack</h1>
+            <h1 className="text-lg font-semibold leading-tight">Xray Stack</h1>
             <p className="text-xs text-muted dark:text-muted-dark">Sign in to the control panel</p>
           </div>
         </div>
@@ -41,14 +46,16 @@ export default function Login({ onLoggedIn, bootstrapNeeded }: { onLoggedIn: () 
             <ShieldAlert size={14} className="mt-0.5 shrink-0 text-warn" />
             <div>
               No admin accounts exist yet. Create the first admin by calling
-              <code className="mx-1 px-1 py-0.5 rounded bg-bg dark:bg-bg-dark font-mono">POST /api/admins</code>
+              <code className="mx-1 rounded bg-bg px-1 py-0.5 font-mono dark:bg-bg-dark">
+                POST /api/admins
+              </code>
               with an existing panel Bearer token, then return here to sign in.
             </div>
           </div>
         )}
 
-        <label className="block mb-3">
-          <div className="text-xs text-muted dark:text-muted-dark mb-1">Username</div>
+        <label className="mb-3 block">
+          <div className="mb-1 text-xs text-muted dark:text-muted-dark">Username</div>
           <input
             className="input"
             autoFocus
@@ -58,8 +65,8 @@ export default function Login({ onLoggedIn, bootstrapNeeded }: { onLoggedIn: () 
             onChange={(e) => setUsername(e.target.value)}
           />
         </label>
-        <label className="block mb-4">
-          <div className="text-xs text-muted dark:text-muted-dark mb-1">Password</div>
+        <label className="mb-4 block">
+          <div className="mb-1 text-xs text-muted dark:text-muted-dark">Password</div>
           <input
             className="input"
             type="password"
@@ -71,7 +78,7 @@ export default function Login({ onLoggedIn, bootstrapNeeded }: { onLoggedIn: () 
         </label>
 
         {error && (
-          <div className="mb-3 text-xs text-bad dark:text-bad-dark border border-bad/30 bg-bad/5 rounded p-2">
+          <div className="mb-3 rounded border border-bad/30 bg-bad/5 p-2 text-xs text-bad dark:text-bad-dark">
             {error}
           </div>
         )}
@@ -81,7 +88,7 @@ export default function Login({ onLoggedIn, bootstrapNeeded }: { onLoggedIn: () 
           className="btn btn-primary w-full justify-center"
           disabled={pending || !username || !password}
         >
-          <LogIn size={14} /> {pending ? 'Signing in…' : 'Sign in'}
+          <LogIn size={14} /> {pending ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </div>

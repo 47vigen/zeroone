@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/monitor"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stats"
-	"github.com/sakhtar/xray-stack-zeroone/internal/tunnel"
-	"github.com/sakhtar/xray-stack-zeroone/internal/usage"
+	"github.com/amirrezakm/zeroone/internal/monitor"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/stats"
+	"github.com/amirrezakm/zeroone/internal/tunnel"
+	"github.com/amirrezakm/zeroone/internal/usage"
 )
 
 // Store holds two resolutions. Fine = 5s × 720 (1h). Coarse = 1m × 1440 (24h).
@@ -31,9 +31,9 @@ type Store struct {
 
 	// Per-user bandwidth: deltas observed via the auto-sync ticker.
 	// emailBps[email] = [uplink_bps, downlink_bps] from the last sync interval.
-	lastUser    map[string]usage.Pair
-	lastUserTS  int64
-	emailBps    map[string][2]float64
+	lastUser   map[string]usage.Pair
+	lastUserTS int64
+	emailBps   map[string][2]float64
 }
 
 func NewStore(configRead func() stack.Config, failoverTag func() string) *Store {

@@ -12,26 +12,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/analytics"
-	"github.com/sakhtar/xray-stack-zeroone/internal/audit"
-	"github.com/sakhtar/xray-stack-zeroone/internal/auth"
-	"github.com/sakhtar/xray-stack-zeroone/internal/bandwidth"
-	"github.com/sakhtar/xray-stack-zeroone/internal/enforce"
-	"github.com/sakhtar/xray-stack-zeroone/internal/events"
-	"github.com/sakhtar/xray-stack-zeroone/internal/failover"
-	"github.com/sakhtar/xray-stack-zeroone/internal/firewall"
-	"github.com/sakhtar/xray-stack-zeroone/internal/links"
-	"github.com/sakhtar/xray-stack-zeroone/internal/metrics"
-	"github.com/sakhtar/xray-stack-zeroone/internal/monitor"
-	"github.com/sakhtar/xray-stack-zeroone/internal/presence"
-	"github.com/sakhtar/xray-stack-zeroone/internal/relay"
-	"github.com/sakhtar/xray-stack-zeroone/internal/sessions"
-	"github.com/sakhtar/xray-stack-zeroone/internal/snapshots"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
-	"github.com/sakhtar/xray-stack-zeroone/internal/subscription"
-	"github.com/sakhtar/xray-stack-zeroone/internal/tunnel"
-	"github.com/sakhtar/xray-stack-zeroone/internal/usage"
-	"github.com/sakhtar/xray-stack-zeroone/internal/xray"
+	"github.com/amirrezakm/zeroone/internal/analytics"
+	"github.com/amirrezakm/zeroone/internal/audit"
+	"github.com/amirrezakm/zeroone/internal/auth"
+	"github.com/amirrezakm/zeroone/internal/bandwidth"
+	"github.com/amirrezakm/zeroone/internal/enforce"
+	"github.com/amirrezakm/zeroone/internal/events"
+	"github.com/amirrezakm/zeroone/internal/failover"
+	"github.com/amirrezakm/zeroone/internal/firewall"
+	"github.com/amirrezakm/zeroone/internal/links"
+	"github.com/amirrezakm/zeroone/internal/metrics"
+	"github.com/amirrezakm/zeroone/internal/monitor"
+	"github.com/amirrezakm/zeroone/internal/presence"
+	"github.com/amirrezakm/zeroone/internal/relay"
+	"github.com/amirrezakm/zeroone/internal/sessions"
+	"github.com/amirrezakm/zeroone/internal/snapshots"
+	"github.com/amirrezakm/zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/subscription"
+	"github.com/amirrezakm/zeroone/internal/tunnel"
+	"github.com/amirrezakm/zeroone/internal/usage"
+	"github.com/amirrezakm/zeroone/internal/xray"
 )
 
 type Options struct {
@@ -156,7 +156,7 @@ func NewServerWithOptions(cfg stack.Config, configPath string, allowApply bool, 
 }
 
 // portalBaseURL reconstructs the absolute URL the client used to reach
-// xray-stackd, so generated subscription / portal links match the host
+// zeroone, so generated subscription / portal links match the host
 // the user knows about. nginx forwards Host via proxy_set_header, so
 // r.Host is the original. Scheme is inferred: an IP host means raw HTTP
 // access; a domain host means the request came through an HTTPS-fronting
@@ -846,7 +846,7 @@ func clientEndpointURL(ep stack.ClientEndpoint, path string) string {
 		scheme = "https"
 	}
 	host := ep.Host
-	if ep.Port != 0 && !((scheme == "https" && ep.Port == 443) || (scheme == "http" && ep.Port == 80)) {
+	if ep.Port != 0 && (scheme != "https" || ep.Port != 443) && (scheme != "http" || ep.Port != 80) {
 		host = fmt.Sprintf("%s:%d", host, ep.Port)
 	}
 	if path == "" || path[0] != '/' {
@@ -863,7 +863,7 @@ func httpProbe(ctx context.Context, rawURL string) (int, int64, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; XrayStackHealth/1.0)")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Zeroone-Health/1.0)")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 	req.Header.Set("Cache-Control", "no-cache")
 
@@ -1482,7 +1482,7 @@ func (s *Server) ui(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = w.Write([]byte(`<!doctype html><html><head><meta charset="utf-8"><title>Xray Stack</title></head><body><h1>Xray Stack</h1><p>Go control plane is running.</p><script>fetch('/api/config/summary').then(r=>r.json()).then(d=>document.body.appendChild(document.createElement('pre')).textContent=JSON.stringify(d,null,2))</script></body></html>`))
+	_, _ = w.Write([]byte(`<!doctype html><html><head><meta charset="utf-8"><title>Zeroone</title></head><body><h1>Zeroone</h1><p>Go control plane is running.</p><script>fetch('/api/config/summary').then(r=>r.json()).then(d=>document.body.appendChild(document.createElement('pre')).textContent=JSON.stringify(d,null,2))</script></body></html>`))
 }
 
 func (s *Server) serveUI(w http.ResponseWriter, r *http.Request) {

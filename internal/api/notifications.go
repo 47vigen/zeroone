@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/notify"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/notify"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 func (s *Server) notificationsGet(w http.ResponseWriter, r *http.Request) {
@@ -16,14 +16,14 @@ func (s *Server) notificationsGet(w http.ResponseWriter, r *http.Request) {
 	// Redact webhook secret + telegram bot token before returning
 	view := map[string]any{
 		"webhook": map[string]any{
-			"url":            cfg.Webhook.URL,
-			"events":         cfg.Webhook.Events,
-			"secret_set":     cfg.Webhook.Secret != "",
+			"url":        cfg.Webhook.URL,
+			"events":     cfg.Webhook.Events,
+			"secret_set": cfg.Webhook.Secret != "",
 		},
 		"telegram": map[string]any{
-			"chat_id":        cfg.Telegram.ChatID,
-			"events":         cfg.Telegram.Events,
-			"bot_token_set":  cfg.Telegram.BotToken != "",
+			"chat_id":       cfg.Telegram.ChatID,
+			"events":        cfg.Telegram.Events,
+			"bot_token_set": cfg.Telegram.BotToken != "",
 		},
 	}
 	s.write(w, map[string]any{"ok": true, "notifications": view})

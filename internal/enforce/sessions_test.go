@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sakhtar/xray-stack-zeroone/internal/monitor"
-	"github.com/sakhtar/xray-stack-zeroone/internal/stack"
+	"github.com/amirrezakm/zeroone/internal/monitor"
+	"github.com/amirrezakm/zeroone/internal/stack"
 )
 
 func TestPlanSessionLimitsKicksOldestIPs(t *testing.T) {
@@ -23,8 +23,8 @@ func TestPlanSessionLimitsKicksOldestIPs(t *testing.T) {
 				IPDetails: []monitor.IPDetail{
 					{IP: "10.0.0.1", LastSeen: now.Unix()},
 					{IP: "10.0.0.2", LastSeen: now.Add(-1 * time.Minute).Unix()},
-					{IP: "10.0.0.3", LastSeen: now.Add(-1 * time.Hour).Unix()},   // kick
-					{IP: "10.0.0.4", LastSeen: now.Add(-2 * time.Hour).Unix()},   // kick
+					{IP: "10.0.0.3", LastSeen: now.Add(-1 * time.Hour).Unix()}, // kick
+					{IP: "10.0.0.4", LastSeen: now.Add(-2 * time.Hour).Unix()}, // kick
 				},
 			},
 			{
