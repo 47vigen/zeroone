@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.1 — 2026-05-21
+
+### Bug Fixes
+
+- require login after install; close bootstrap-open hole (7c3963a)
+
 ## v1.1.0 — 2026-05-20
 
 ### Features
