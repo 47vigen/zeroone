@@ -117,13 +117,13 @@ export default function Overview() {
       </section>
 
       <section className="panel mb-6">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
           <h2 className="text-sm font-semibold tracking-tight">Online users (last 5 min)</h2>
-          <span className="text-xs text-muted dark:text-muted-dark">live from xray logs</span>
+          <span className="text-muted dark:text-muted-dark text-xs">live from xray logs</span>
         </div>
-        <div className="divide-y divide-border dark:divide-border-dark">
+        <div className="divide-border dark:divide-border-dark divide-y">
           {(online.data?.users ?? []).length === 0 && (
-            <div className="px-5 py-6 text-sm text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark px-5 py-6 text-sm">
               No users active in the last 5 minutes.
             </div>
           )}
@@ -133,7 +133,7 @@ export default function Overview() {
               className="grid grid-cols-[1.4fr,1fr,1fr,2fr] items-center gap-3 px-5 py-3 text-sm"
             >
               <div className="flex min-w-0 items-center gap-2">
-                <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-ok dark:bg-ok-dark" />
+                <span className="bg-ok dark:bg-ok-dark h-2 w-2 shrink-0 animate-pulse rounded-full" />
                 <span className="truncate font-medium">{u.email}</span>
               </div>
               <div className="text-xs">
@@ -144,7 +144,7 @@ export default function Overview() {
                 </span>
               </div>
               <div className="truncate font-mono text-xs">{u.ips.join(", ")}</div>
-              <div className="truncate text-xs text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark truncate text-xs">
                 last {relativeTime(u.last_seen)} · {(u.recent_destinations[0] ?? "—").slice(0, 56)}
               </div>
             </div>
@@ -156,7 +156,7 @@ export default function Overview() {
         <div className="panel panel-pad lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold tracking-tight">Tunnels</h2>
-            <span className="text-xs text-muted dark:text-muted-dark">
+            <span className="text-muted dark:text-muted-dark text-xs">
               {health.data
                 ? `Updated ${relativeTime(Math.floor(new Date(health.data.generated_at).getTime() / 1000))}`
                 : "—"}
@@ -166,12 +166,12 @@ export default function Overview() {
             {tunnels.map((t) => (
               <div
                 key={t.name}
-                className="rounded-lg border border-border p-3 dark:border-border-dark"
+                className="border-border dark:border-border-dark rounded-lg border p-3"
               >
                 <div className="mb-2 flex items-center justify-between">
                   <div>
                     <div className="text-sm font-semibold">{t.name}</div>
-                    <div className="text-xs text-muted dark:text-muted-dark">
+                    <div className="text-muted dark:text-muted-dark text-xs">
                       {t.interface} · {t.type}
                     </div>
                   </div>
@@ -197,7 +197,7 @@ export default function Overview() {
                   </div>
                 </div>
                 {t.error && (
-                  <div className="mt-2 text-xs text-bad dark:text-bad-dark">{t.error}</div>
+                  <div className="text-bad dark:text-bad-dark mt-2 text-xs">{t.error}</div>
                 )}
               </div>
             ))}
@@ -208,14 +208,14 @@ export default function Overview() {
           <h2 className="mb-3 text-sm font-semibold tracking-tight">Top users (by traffic)</h2>
           <div className="space-y-2">
             {topUsers.length === 0 && (
-              <div className="text-sm text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark text-sm">
                 No usage data yet — sync to populate.
               </div>
             )}
             {topUsers.map((u) => (
               <div key={u.email} className="flex items-center justify-between text-sm">
                 <span className="truncate font-medium">{u.email}</span>
-                <span className="font-mono text-muted dark:text-muted-dark">{bytes(u.total)}</span>
+                <span className="text-muted dark:text-muted-dark font-mono">{bytes(u.total)}</span>
               </div>
             ))}
           </div>
@@ -223,15 +223,15 @@ export default function Overview() {
       </section>
 
       <section className="panel">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-4">
           <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
             <Activity size={14} /> Recent activity
           </h2>
-          <span className="text-xs text-muted dark:text-muted-dark">audit log</span>
+          <span className="text-muted dark:text-muted-dark text-xs">audit log</span>
         </div>
-        <div className="divide-y divide-border dark:divide-border-dark">
+        <div className="divide-border dark:divide-border-dark divide-y">
           {(audit.data?.entries ?? []).length === 0 && (
-            <div className="px-5 py-6 text-sm text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark px-5 py-6 text-sm">
               No actions recorded yet.
             </div>
           )}
@@ -242,9 +242,9 @@ export default function Overview() {
                   <span className="dot bg-muted" />
                   {e.action}
                 </span>
-                <span className="truncate text-muted dark:text-muted-dark">{e.target || "—"}</span>
+                <span className="text-muted dark:text-muted-dark truncate">{e.target || "—"}</span>
               </div>
-              <div className="whitespace-nowrap text-xs text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark text-xs whitespace-nowrap">
                 {e.actor} · {formatTime(e.t)}
               </div>
             </div>

@@ -37,9 +37,9 @@ export default function Snapshots() {
           <div>Files</div>
           <div></div>
         </div>
-        <div className="divide-y divide-border dark:divide-border-dark">
+        <div className="divide-border dark:divide-border-dark divide-y">
           {list.length === 0 && (
-            <div className="px-4 py-6 text-sm text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark px-4 py-6 text-sm">
               No snapshots yet.
             </div>
           )}
@@ -53,7 +53,7 @@ export default function Snapshots() {
                 <div>{formatTime(s.t)}</div>
                 <div className="text-muted dark:text-muted-dark">{relativeTime(s.t)}</div>
               </div>
-              <div className="truncate font-mono text-xs text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark truncate font-mono text-xs">
                 stack.json + xray.json
               </div>
               <div>

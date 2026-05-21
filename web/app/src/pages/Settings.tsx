@@ -39,7 +39,7 @@ export default function Settings() {
         <SettingsXrayPanel />
         <div className="panel panel-pad">
           <h2 className="mb-3 text-sm font-semibold tracking-tight">Apply mode</h2>
-          <p className="mb-3 text-sm text-muted dark:text-muted-dark">
+          <p className="text-muted dark:text-muted-dark mb-3 text-sm">
             Daemon flag <code className="font-mono">-allow-apply</code> controls whether the panel
             can mutate live Xray.
           </p>
@@ -69,7 +69,7 @@ export default function Settings() {
               </div>
             </dl>
           ) : (
-            <div className="text-sm text-muted dark:text-muted-dark">—</div>
+            <div className="text-muted dark:text-muted-dark text-sm">—</div>
           )}
         </div>
 
@@ -104,7 +104,7 @@ function AdminsPanel() {
   const items = admins.data?.admins ?? [];
   return (
     <div className="panel">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <ShieldCheck size={14} /> Panel admins
         </h2>
@@ -112,23 +112,23 @@ function AdminsPanel() {
           <Plus size={12} /> Add admin
         </button>
       </div>
-      <div className="border-b border-border px-5 py-2 text-xs text-muted dark:border-border-dark dark:text-muted-dark">
+      <div className="border-border text-muted dark:border-border-dark dark:text-muted-dark border-b px-5 py-2 text-xs">
         Admins sign in via the panel login page. Their password is hashed with PBKDF2-SHA256. Bearer
         tokens (above) still work for CLI / automation.
         {me.data?.bootstrap_needed && (
           <> No admins exist yet — create the first one to enable the login page.</>
         )}
       </div>
-      <div className="divide-y divide-border dark:divide-border-dark">
+      <div className="divide-border dark:divide-border-dark divide-y">
         {items.length === 0 && (
-          <div className="px-5 py-4 text-sm text-muted dark:text-muted-dark">No admins yet.</div>
+          <div className="text-muted dark:text-muted-dark px-5 py-4 text-sm">No admins yet.</div>
         )}
         {items.map((a) => (
           <div key={a.username} className="flex items-center gap-3 px-5 py-3 text-sm">
             <UserCog size={14} className="text-muted" />
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{a.username}</div>
-              <div className="text-xs text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark text-xs">
                 {a.last_login ? <>last login {relativeTime(a.last_login)}</> : "never signed in"}
                 {a.created_at ? <> · created {relativeTime(a.created_at)}</> : null}
               </div>
@@ -308,7 +308,7 @@ function ClientEndpointsPanel() {
 
   return (
     <div className="panel lg:col-span-2">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <Globe2 size={14} /> Client domains
         </h2>
@@ -322,7 +322,7 @@ function ClientEndpointsPanel() {
       </div>
       <div className="grid gap-0 lg:grid-cols-[1.1fr,1.4fr]">
         <form
-          className="space-y-3 border-b border-border p-5 dark:border-border-dark lg:border-b-0 lg:border-r"
+          className="border-border dark:border-border-dark space-y-3 border-b p-5 lg:border-r lg:border-b-0"
           onSubmit={save}
         >
           <div className="grid gap-2 sm:grid-cols-2">
@@ -420,9 +420,9 @@ function ClientEndpointsPanel() {
             </button>
           </div>
         </form>
-        <div className="divide-y divide-border dark:divide-border-dark">
+        <div className="divide-border dark:divide-border-dark divide-y">
           {endpoints.length === 0 && (
-            <div className="px-5 py-6 text-sm text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark px-5 py-6 text-sm">
               No client domains configured.
             </div>
           )}
@@ -435,12 +435,12 @@ function ClientEndpointsPanel() {
                 <div className="font-medium">{ep.name}</div>
                 <EndpointStatus health={healthByName.get(ep.name)} enabled={ep.enabled} />
               </div>
-              <div className="break-all font-mono text-xs">
+              <div className="font-mono text-xs break-all">
                 {ep.tls ? "https" : "http"}://{ep.host}:{ep.port}
                 {ep.path} · {ep.network.toUpperCase()}
                 {ep.mode ? `/${ep.mode}` : ""}
                 {healthByName.get(ep.name) && (
-                  <div className="mt-1 font-sans text-xs text-muted dark:text-muted-dark">
+                  <div className="text-muted dark:text-muted-dark mt-1 font-sans text-xs">
                     path HTTP {healthByName.get(ep.name)?.status_code || "—"} · landing HTTP{" "}
                     {healthByName.get(ep.name)?.landing_status || "—"} ·{" "}
                     {healthByName.get(ep.name)?.latency_ms ?? 0}ms
@@ -470,7 +470,7 @@ function ClientEndpointsPanel() {
 function EndpointStatus({ health, enabled }: { health?: ClientEndpointHealth; enabled: boolean }) {
   if (!enabled) {
     return (
-      <div className="pill mt-1 text-muted">
+      <div className="pill text-muted mt-1">
         <span className="dot" />
         Disabled
       </div>
@@ -478,7 +478,7 @@ function EndpointStatus({ health, enabled }: { health?: ClientEndpointHealth; en
   }
   if (!health) {
     return (
-      <div className="pill mt-1 text-muted">
+      <div className="pill text-muted mt-1">
         <span className="dot" />
         Unchecked
       </div>
@@ -542,7 +542,7 @@ function TokensPanel() {
 
   return (
     <div className="panel">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <KeyRound size={14} /> API tokens
         </h2>
@@ -550,9 +550,9 @@ function TokensPanel() {
           <Plus size={12} /> New token
         </button>
       </div>
-      <div className="divide-y divide-border dark:divide-border-dark">
+      <div className="divide-border dark:divide-border-dark divide-y">
         {(data?.tokens ?? []).length === 0 && (
-          <div className="px-5 py-6 text-sm text-muted dark:text-muted-dark">
+          <div className="text-muted dark:text-muted-dark px-5 py-6 text-sm">
             No tokens. The panel still uses nginx Basic Auth at{" "}
             <code className="font-mono">/monitor/</code>.
           </div>
@@ -564,11 +564,11 @@ function TokensPanel() {
           >
             <div>
               <div className="font-medium">{t.id}</div>
-              <div className="font-mono text-xs text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark font-mono text-xs">
                 {t.hash_short}…
               </div>
             </div>
-            <div className="text-xs text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark text-xs">
               <div>{t.scope || "read+write"}</div>
               <div>
                 {t.last_used ? `Last used ${relativeTime(t.last_used)}` : "Never used"} · created{" "}
@@ -668,11 +668,11 @@ function RevealTokenDialog({
         <h3 className="mb-2 text-base font-semibold">
           Token <code className="font-mono">{id}</code> created
         </h3>
-        <p className="mb-3 text-xs text-warn dark:text-warn-dark">
+        <p className="text-warn dark:text-warn-dark mb-3 text-xs">
           Save this token now — it cannot be retrieved later.
         </p>
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-border p-3 dark:border-border-dark">
-          <code className="flex-1 break-all font-mono text-xs">{token}</code>
+        <div className="border-border dark:border-border-dark mb-4 flex items-center gap-2 rounded-lg border p-3">
+          <code className="flex-1 font-mono text-xs break-all">{token}</code>
           <button
             className="btn text-xs"
             onClick={async () => {
@@ -814,7 +814,7 @@ function NotificationsPanel() {
             />
           </div>
           {!tgChatID && (data?.notifications.telegram.bot_token_set ?? false) && (
-            <div className="mb-2 text-xs text-warn dark:text-warn-dark">
+            <div className="text-warn dark:text-warn-dark mb-2 text-xs">
               No chat ID set — Telegram messages won't deliver. Click "Find chat" after sending
               /start to your bot.
             </div>
@@ -887,7 +887,7 @@ function DiscoverChatsButton({
 
   return (
     <>
-      <button type="button" className="btn whitespace-nowrap text-xs" onClick={openDialog}>
+      <button type="button" className="btn text-xs whitespace-nowrap" onClick={openDialog}>
         <MessageCircle size={12} /> Find chat
       </button>
       {open && (
@@ -904,30 +904,30 @@ function DiscoverChatsButton({
                 <RefreshCw size={12} className={loading ? "animate-spin" : ""} /> Refresh
               </button>
             </div>
-            <p className="mb-3 text-xs text-muted dark:text-muted-dark">
+            <p className="text-muted dark:text-muted-dark mb-3 text-xs">
               Open Telegram, search for your bot, send <code>/start</code>, then click Refresh
               below. The list shows recent chats that messaged the bot.
             </p>
             {error && (
-              <div className="mb-2 break-all text-xs text-bad dark:text-bad-dark">{error}</div>
+              <div className="text-bad dark:text-bad-dark mb-2 text-xs break-all">{error}</div>
             )}
             {loading && (
-              <div className="text-xs text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark text-xs">
                 Calling Telegram via the local SOCKS…
               </div>
             )}
             {!loading && chats && chats.length === 0 && (
-              <div className="text-xs text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark text-xs">
                 {hint || "No chats yet — send a message to the bot first."}
               </div>
             )}
             {!loading && chats && chats.length > 0 && (
-              <div className="divide-y divide-border rounded-lg border border-border dark:divide-border-dark dark:border-border-dark">
+              <div className="divide-border border-border dark:divide-border-dark dark:border-border-dark divide-y rounded-lg border">
                 {chats.map((c) => (
                   <button
                     key={c.chat_id}
                     type="button"
-                    className="w-full px-3 py-2 text-left hover:bg-bg dark:hover:bg-bg-dark"
+                    className="hover:bg-bg dark:hover:bg-bg-dark w-full px-3 py-2 text-left"
                     onClick={() => {
                       onPick(c.chat_id);
                       setOpen(false);
@@ -936,11 +936,11 @@ function DiscoverChatsButton({
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">{c.title || "?"}</span>
-                      <span className="font-mono text-xs text-muted dark:text-muted-dark">
+                      <span className="text-muted dark:text-muted-dark font-mono text-xs">
                         {c.chat_id}
                       </span>
                     </div>
-                    <div className="text-xs text-muted dark:text-muted-dark">
+                    <div className="text-muted dark:text-muted-dark text-xs">
                       {c.type}
                       {c.from ? ` · from ${c.from}` : ""}
                     </div>

@@ -137,12 +137,12 @@ function RelayStatusCard({
 
   return (
     <section className="panel">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-4">
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
             <Activity size={14} /> MasterHttpRelayVPN
           </h2>
-          <p className="text-xs text-muted dark:text-muted-dark">
+          <p className="text-muted dark:text-muted-dark text-xs">
             HTTP relay through Google Apps Script · outbound tag{" "}
             <code>{cfg.outbound_tag || cfg.defaults.outbound_tag}</code>
           </p>
@@ -181,11 +181,11 @@ function RelayStatusCard({
         />
       </div>
       {status?.last_error && (
-        <div className="break-all border-t border-border px-5 py-2 font-mono text-xs text-bad dark:border-border-dark dark:text-bad-dark">
+        <div className="border-border text-bad dark:border-border-dark dark:text-bad-dark border-t px-5 py-2 font-mono text-xs break-all">
           {status.last_error}
         </div>
       )}
-      <div className="flex flex-wrap gap-2 border-t border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex flex-wrap gap-2 border-t px-5 py-3">
         <button
           className="btn btn-primary text-xs"
           onClick={runTest}
@@ -276,18 +276,18 @@ function RelaySitesPanel({ data }: { data: RelayConfigView }) {
 
   return (
     <section className="panel">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-4">
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
             <Globe size={14} /> Sites routed through relay
           </h2>
-          <p className="text-xs text-muted dark:text-muted-dark">
+          <p className="text-muted dark:text-muted-dark text-xs">
             {enabledCount} of {data.sites.length} enabled · xray sends matching traffic to{" "}
             <code>{data.outbound_tag || data.defaults.outbound_tag}</code>
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-[1fr,1fr,auto] items-center gap-2 border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark grid grid-cols-[1fr,1fr,auto] items-center gap-2 border-b px-5 py-3">
         <input
           className="input text-xs"
           placeholder="example.com or domain:keyword"
@@ -310,22 +310,22 @@ function RelaySitesPanel({ data }: { data: RelayConfigView }) {
         </button>
       </div>
       {data.sites.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-muted dark:text-muted-dark">
+        <div className="text-muted dark:text-muted-dark px-5 py-8 text-center text-sm">
           No sites yet. Add a domain above (e.g. <code>example.com</code>,{" "}
           <code>domain:youtube.com</code>, <code>regexp:.*\.example\.com</code>).
         </div>
       ) : (
-        <div className="divide-y divide-border dark:divide-border-dark">
+        <div className="divide-border dark:divide-border-dark divide-y">
           {data.sites.map((s) => (
             <div
               key={s.domain}
               className="grid grid-cols-[1fr,2fr,auto,auto] items-center gap-3 px-5 py-2.5 text-sm"
             >
-              <div className="break-all font-mono text-xs">{s.domain}</div>
-              <div className="truncate text-xs text-muted dark:text-muted-dark">
+              <div className="font-mono text-xs break-all">{s.domain}</div>
+              <div className="text-muted dark:text-muted-dark truncate text-xs">
                 {s.note || "—"}
               </div>
-              <label className="flex cursor-pointer select-none items-center gap-2 text-xs">
+              <label className="flex cursor-pointer items-center gap-2 text-xs select-none">
                 <input
                   type="checkbox"
                   checked={s.enabled}
@@ -410,9 +410,9 @@ function RelayConfigForm({ data }: { data: RelayConfigView }) {
 
   return (
     <section className="panel">
-      <div className="border-b border-border px-5 py-4 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark border-b px-5 py-4">
         <h2 className="text-sm font-semibold tracking-tight">Plugin settings</h2>
-        <p className="text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark text-xs">
           Apps Script credentials and binary path. AUTH_KEY is write-only — leave blank to keep
           existing.
         </p>
@@ -509,7 +509,7 @@ function RelayConfigForm({ data }: { data: RelayConfigView }) {
           />
         </Field>
       </div>
-      <div className="flex justify-end border-t border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex justify-end border-t px-5 py-3">
         <button className="btn btn-primary text-xs" onClick={save} disabled={update.isPending}>
           <Save size={12} /> {update.isPending ? "Saving…" : "Save settings"}
         </button>
@@ -533,14 +533,14 @@ function RelayLogsPanel() {
   const lines = logs.data?.lines ?? [];
   return (
     <section className="panel">
-      <div className="border-b border-border px-5 py-4 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark border-b px-5 py-4">
         <h2 className="text-sm font-semibold tracking-tight">Recent activity</h2>
-        <p className="text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark text-xs">
           Supervisor events + tail of{" "}
           <code className="break-all">{logs.data?.path || "relay.log"}</code>
         </p>
       </div>
-      <div className="max-h-72 divide-y divide-border overflow-auto dark:divide-border-dark">
+      <div className="divide-border dark:divide-border-dark max-h-72 divide-y overflow-auto">
         {events
           .slice()
           .reverse()
@@ -560,11 +560,11 @@ function RelayLogsPanel() {
               </span>{" "}
               <span>{e.msg}</span>
               {e.err && <span className="text-bad dark:text-bad-dark"> — {e.err}</span>}
-              <div className="font-mono text-muted dark:text-muted-dark">{relativeTime(e.t)}</div>
+              <div className="text-muted dark:text-muted-dark font-mono">{relativeTime(e.t)}</div>
             </div>
           ))}
         {events.length === 0 && lines.length === 0 && (
-          <div className="px-5 py-6 text-xs text-muted dark:text-muted-dark">
+          <div className="text-muted dark:text-muted-dark px-5 py-6 text-xs">
             No events yet. Enable the plugin and run a probe to populate.
           </div>
         )}
@@ -575,7 +575,7 @@ function RelayLogsPanel() {
           .map((line, i) => (
             <div
               key={`ln-${i}`}
-              className="break-all px-5 py-1.5 font-mono text-xs text-muted dark:text-muted-dark"
+              className="text-muted dark:text-muted-dark px-5 py-1.5 font-mono text-xs break-all"
             >
               {line}
             </div>
