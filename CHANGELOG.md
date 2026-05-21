@@ -1,50 +1,44 @@
 # Changelog
 
-## v1.3.1 — 2026-05-21
+## v0.1.0 — 2026-05-21
 
-### Bug Fixes
+### ⚠ Breaking Changes
 
-- clean upload staging dir on success too (832ea88)
-- address Codex review findings from PRs #7–#9 (008f780)
-
-## v1.3.0 — 2026-05-21
+- rebrand xray-stack/xray-stackd to zeroone (4c97ed9)
 
 ### Features
 
-- xray runtime updates with mirror + offline upload (a3c4410)
+- add air-gapped install flow for Iranian deployments (fbbb3cb)
+- one-tap "Add to app" deeplinks in user portal (56a1726)
+- add ESLint + Prettier and format the whole tree (ec022ca)
+- automate semver releases on merge to main (17666d8)
+- let forks install from their own GHCR via ZEROONE_REPO (3359981)
+- dockerize + one-line installer + CI (6354edd)
 
 ### Bug Fixes
 
-- use regexp sanitiser CodeQL recognises (67986bc)
-- lint findings + path-traversal hardening (449a575)
+- handle deb822 apt sources; recover image tag from docker-load output (d3efd03)
+- pass --pull never to compose; mkdir before tar -C in docs (74f8994)
+- pin ZEROONE_VERSION from bundle; restore apt sources on failure (7dd09f8)
+- propagate close error from copyFile writer (de31444)
+- fall back to recursive copy on cross-device legacy state (1220150)
+- merge legacy state into pre-created /var/lib/zeroone (00303c7)
+- pin builder stages to $BUILDPLATFORM to avoid QEMU stalls (132e32e)
+- bump golangci-lint-action to v7 and Trivy to master (5f8d2fe)
+- copy CLI from disk path instead of $0 (86a4a48)
+- honor ZEROONE_ADMIN_LISTEN and ZEROONE_STATE_DIR for container template (4b6cc3b)
+- gofmt + race in xrayproc supervisor (6bd988f)
 
-## [Unreleased]
+### Documentation
 
-### Features
+- add emojis and cross-links to install guides (9e3950b)
+- elevate offline install with Iran-specific rationale (8b75f69)
+- simplify with 3-step quick install + Advanced section (384bbee)
 
-- panel-driven Xray binary + geo data updates (Settings → Xray runtime). The
-  image still ships xray, so first install is unchanged; the panel writes
-  newer versions to a writable override path that takes precedence over the
-  image binary. Includes online updates with sha256 verification against
-  upstream `.dgst`, offline upload of a pre-downloaded zip, rollback to a
-  prior override version, and "reset to image" to wipe overrides entirely.
-- mirror configuration for xray update downloads. Env-driven defaults
-  (`ZEROONE_XRAY_RELEASE_MIRROR`, `ZEROONE_XRAY_ASSETS_MIRROR`) plus
-  per-installation overrides in the panel persisted to
-  `stack.json:xray_update.release_mirror`. Pinned version + auto-check
-  toggles supported.
+### CI
 
-## v1.2.0 — 2026-05-21
-
-### Features
-
-- titled snapshots + Xray Config panel page (30dfa31)
-
-## v1.1.1 — 2026-05-21
-
-### Bug Fixes
-
-- require login after install; close bootstrap-open hole (7c3963a)
+- publish prebuilt offline bundles as release assets (57adf31)
+- cover offline install scripts; fix two warnings (25d0e71)
 
 ## v1.1.0 — 2026-05-20
 
