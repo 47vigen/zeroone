@@ -54,20 +54,20 @@ export default function Topbar({ publicIP }: { publicIP?: string }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-panel/90 px-4 backdrop-blur dark:border-border-dark dark:bg-panel-dark/90 lg:px-6">
+      <header className="border-border bg-panel/90 dark:border-border-dark dark:bg-panel-dark/90 sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4 backdrop-blur lg:px-6">
         <div className="flex items-center gap-2 md:hidden">
-          <div className="grid h-7 w-7 place-items-center rounded-md bg-accent">
-            <span className="text-xs font-bold text-white">X</span>
+          <div className="bg-accent grid h-7 w-7 place-items-center rounded-md">
+            <span className="text-xs font-bold text-white">Z</span>
           </div>
-          <span className="font-semibold">{publicIP || "Xray Stack"}</span>
+          <span className="font-semibold">{publicIP || "ZeroOne"}</span>
         </div>
         <button
           onClick={() => setPaletteOpen(true)}
-          className="hidden min-w-[18rem] items-center gap-2 rounded-lg border border-border bg-bg px-3 py-1.5 text-sm text-muted hover:text-text dark:border-border-dark dark:bg-bg-dark dark:text-muted-dark dark:hover:text-text-dark md:flex"
+          className="border-border bg-bg text-muted hover:text-text dark:border-border-dark dark:bg-bg-dark dark:text-muted-dark dark:hover:text-text-dark hidden min-w-[18rem] items-center gap-2 rounded-lg border px-3 py-1.5 text-sm md:flex"
         >
           <Search size={14} />
           <span>Search users, rules, domains…</span>
-          <kbd className="ml-auto rounded border border-border bg-panel px-1 py-0.5 font-mono text-[10px] dark:border-border-dark dark:bg-panel-dark">
+          <kbd className="border-border bg-panel dark:border-border-dark dark:bg-panel-dark ml-auto rounded border px-1 py-0.5 font-mono text-[10px]">
             ⌘K
           </kbd>
         </button>

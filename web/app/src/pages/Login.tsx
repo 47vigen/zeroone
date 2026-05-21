@@ -29,24 +29,24 @@ export default function Login({
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-bg p-6 dark:bg-bg-dark">
+    <div className="bg-bg dark:bg-bg-dark flex min-h-full items-center justify-center p-6">
       <form onSubmit={submit} className="panel panel-pad w-full max-w-sm shadow-lg">
         <div className="mb-4 flex items-center gap-2">
-          <div className="rounded-lg bg-accent/10 p-2 text-accent">
+          <div className="bg-accent/10 text-accent rounded-lg p-2">
             <KeyRound size={18} />
           </div>
           <div>
-            <h1 className="text-lg font-semibold leading-tight">Xray Stack</h1>
-            <p className="text-xs text-muted dark:text-muted-dark">Sign in to the control panel</p>
+            <h1 className="text-lg leading-tight font-semibold">ZeroOne</h1>
+            <p className="text-muted dark:text-muted-dark text-xs">Sign in to the control panel</p>
           </div>
         </div>
 
         {bootstrapNeeded && (
-          <div className="mb-4 flex items-start gap-2 rounded-md border border-warn/40 bg-warn/10 p-3 text-xs">
-            <ShieldAlert size={14} className="mt-0.5 shrink-0 text-warn" />
+          <div className="border-warn/40 bg-warn/10 mb-4 flex items-start gap-2 rounded-md border p-3 text-xs">
+            <ShieldAlert size={14} className="text-warn mt-0.5 shrink-0" />
             <div>
               No admin accounts exist yet. Create the first admin by calling
-              <code className="mx-1 rounded bg-bg px-1 py-0.5 font-mono dark:bg-bg-dark">
+              <code className="bg-bg dark:bg-bg-dark mx-1 rounded px-1 py-0.5 font-mono">
                 POST /api/admins
               </code>
               with an existing panel Bearer token, then return here to sign in.
@@ -55,7 +55,7 @@ export default function Login({
         )}
 
         <label className="mb-3 block">
-          <div className="mb-1 text-xs text-muted dark:text-muted-dark">Username</div>
+          <div className="text-muted dark:text-muted-dark mb-1 text-xs">Username</div>
           <input
             className="input"
             autoFocus
@@ -66,7 +66,7 @@ export default function Login({
           />
         </label>
         <label className="mb-4 block">
-          <div className="mb-1 text-xs text-muted dark:text-muted-dark">Password</div>
+          <div className="text-muted dark:text-muted-dark mb-1 text-xs">Password</div>
           <input
             className="input"
             type="password"
@@ -78,7 +78,7 @@ export default function Login({
         </label>
 
         {error && (
-          <div className="mb-3 rounded border border-bad/30 bg-bad/5 p-2 text-xs text-bad dark:text-bad-dark">
+          <div className="border-bad/30 bg-bad/5 text-bad dark:text-bad-dark mb-3 rounded border p-2 text-xs">
             {error}
           </div>
         )}
