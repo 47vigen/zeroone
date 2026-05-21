@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.3.0 — 2026-05-21
+
+### Features
+
+- xray runtime updates with mirror + offline upload (a3c4410)
+
+### Bug Fixes
+
+- use regexp sanitiser CodeQL recognises (67986bc)
+- lint findings + path-traversal hardening (449a575)
+
 ## [Unreleased]
 
 ### Features
