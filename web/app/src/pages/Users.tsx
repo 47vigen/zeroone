@@ -154,7 +154,7 @@ export default function Users() {
       </section>
 
       <div className="panel mb-4">
-        <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex flex-wrap items-center gap-2 border-b px-4 py-3">
           <div className="flex min-w-[18rem] flex-1 items-center gap-2">
             <Search size={14} className="text-muted" />
             <input
@@ -190,9 +190,9 @@ export default function Users() {
               <div>Last seen</div>
               <div className="pr-2 text-right">Actions</div>
             </div>
-            <div className="divide-y divide-border dark:divide-border-dark">
+            <div className="divide-border dark:divide-border-dark divide-y">
               {users.length === 0 && (
-                <div className="px-4 py-6 text-sm text-muted dark:text-muted-dark">
+                <div className="text-muted dark:text-muted-dark px-4 py-6 text-sm">
                   No users match this filter.
                 </div>
               )}
@@ -295,18 +295,18 @@ function LiveBandwidthChart({ email }: { email: string }) {
         ? `${(bps / 1000).toFixed(1)} Kbps`
         : `${bps.toFixed(0)} bps`;
   return (
-    <div className="rounded-lg border border-border dark:border-border-dark">
-      <div className="flex items-center justify-between border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted dark:border-border-dark">
+    <div className="border-border dark:border-border-dark rounded-lg border">
+      <div className="border-border text-muted dark:border-border-dark flex items-center justify-between border-b px-4 py-2 text-xs font-semibold tracking-wider uppercase">
         <span>Live bandwidth</span>
         {cur && (
-          <span className="font-mono normal-case tracking-normal text-muted">
+          <span className="text-muted font-mono tracking-normal normal-case">
             ↓ {fmtBps(cur.downlink_bps)} · ↑ {fmtBps(cur.uplink_bps)}
           </span>
         )}
       </div>
       <div className="h-40 px-2 py-1">
         {series.length < 2 ? (
-          <div className="flex h-full items-center justify-center text-xs text-muted dark:text-muted-dark">
+          <div className="text-muted dark:text-muted-dark flex h-full items-center justify-center text-xs">
             Collecting samples — bandwidth refreshes every 60s.
           </div>
         ) : (
@@ -327,7 +327,7 @@ function LiveBandwidthChart({ email }: { email: string }) {
               />
               <Tooltip
                 labelFormatter={(v) => formatTimeShort(Number(v))}
-                formatter={(v: number) => fmtBps(v)}
+                formatter={(v) => fmtBps(Number(v))}
                 contentStyle={{ borderRadius: 8 }}
               />
               <Line
@@ -399,17 +399,17 @@ function UserRow({
 
   return (
     <div
-      className="grid cursor-pointer grid-cols-[1.6fr,1fr,1.2fr,1.1fr,1.1fr,1fr,auto] items-center gap-3 px-4 py-3 text-sm hover:bg-bg dark:hover:bg-bg-dark"
+      className="hover:bg-bg dark:hover:bg-bg-dark grid cursor-pointer grid-cols-[1.6fr,1fr,1.2fr,1.1fr,1.1fr,1fr,auto] items-center gap-3 px-4 py-3 text-sm"
       onClick={onOpen}
     >
       <div>
         <div className="flex items-center gap-2">
           <span
-            className={`h-2 w-2 rounded-full ${isOnline ? "animate-pulse bg-ok dark:bg-ok-dark" : "bg-muted/40"}`}
+            className={`h-2 w-2 rounded-full ${isOnline ? "bg-ok dark:bg-ok-dark animate-pulse" : "bg-muted/40"}`}
           />
           <span className="truncate font-medium">{u.email}</span>
         </div>
-        <div className="font-mono text-xs text-muted dark:text-muted-dark">
+        <div className="text-muted dark:text-muted-dark font-mono text-xs">
           {u.uuid.slice(0, 8)}…
         </div>
       </div>
@@ -451,7 +451,7 @@ function UserRow({
                   <span className="text-muted dark:text-muted-dark">/5m</span>
                 </div>
                 <div
-                  className="truncate font-mono text-muted dark:text-muted-dark"
+                  className="text-muted dark:text-muted-dark truncate font-mono"
                   title={onlineEntry.ips.join(", ")}
                 >
                   {onlineEntry.ips.join(", ") || "—"}
@@ -471,8 +471,8 @@ function UserRow({
         <div className="font-medium">{bytes(usageBytes)}</div>
         {u.quota_bytes > 0 ? (
           <>
-            <div className="text-xs text-muted dark:text-muted-dark">of {bytes(u.quota_bytes)}</div>
-            <div className="mt-1 h-1 overflow-hidden rounded-full bg-bg dark:bg-bg-dark">
+            <div className="text-muted dark:text-muted-dark text-xs">of {bytes(u.quota_bytes)}</div>
+            <div className="bg-bg dark:bg-bg-dark mt-1 h-1 overflow-hidden rounded-full">
               <div
                 className="h-full"
                 style={{
@@ -483,7 +483,7 @@ function UserRow({
             </div>
           </>
         ) : (
-          <div className="text-xs text-muted dark:text-muted-dark">unlimited</div>
+          <div className="text-muted dark:text-muted-dark text-xs">unlimited</div>
         )}
       </div>
       <div>
@@ -504,7 +504,7 @@ function UserRow({
             <>
               <div title={formatTime(ts)}>{relativeTime(ts)}</div>
               {ip && (
-                <div className="truncate font-mono text-muted dark:text-muted-dark" title={ip}>
+                <div className="text-muted dark:text-muted-dark truncate font-mono" title={ip}>
                   {ip}
                 </div>
               )}
@@ -540,19 +540,19 @@ function UserDrawer({
   return (
     <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose}>
       <aside
-        className="absolute bottom-0 right-0 top-0 w-full overflow-y-auto border-l border-border bg-panel dark:border-border-dark dark:bg-panel-dark sm:max-w-lg"
+        className="border-border bg-panel dark:border-border-dark dark:bg-panel-dark absolute top-0 right-0 bottom-0 w-full overflow-y-auto border-l sm:max-w-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-panel px-5 py-4 dark:border-border-dark dark:bg-panel-dark">
+        <div className="border-border bg-panel dark:border-border-dark dark:bg-panel-dark sticky top-0 z-10 flex items-center justify-between border-b px-5 py-4">
           <div>
             <h2 className="font-semibold tracking-tight">{user.email}</h2>
-            <div className="font-mono text-xs text-muted dark:text-muted-dark">{user.uuid}</div>
+            <div className="text-muted dark:text-muted-dark font-mono text-xs">{user.uuid}</div>
           </div>
           <button onClick={onClose} className="btn px-2">
             <X size={14} />
           </button>
         </div>
-        <div className="flex gap-1 overflow-x-auto border-b border-border px-3 py-2 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex gap-1 overflow-x-auto border-b px-3 py-2">
           {(
             [
               ["connect", "Connect"],
@@ -616,7 +616,7 @@ function ConnectTab({ user }: { user: UserItem }) {
   return (
     <div className="space-y-4">
       {user.portal_urls && user.portal_urls.length > 0 && (
-        <div className="rounded-lg border border-accent/40 bg-accent/5 p-3 dark:bg-accent/10">
+        <div className="border-accent/40 bg-accent/5 dark:bg-accent/10 rounded-lg border p-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-sm font-semibold">
               <Share2 size={14} /> User portal
@@ -632,7 +632,7 @@ function ConnectTab({ user }: { user: UserItem }) {
               </a>
             )}
           </div>
-          <p className="mb-3 text-[11px] text-muted dark:text-muted-dark">
+          <p className="text-muted dark:text-muted-dark mb-3 text-[11px]">
             Share one of these URLs with the user. They open a self-service page with their usage,
             subscription link, QR code, and per-client import instructions. No login needed — the
             token in the URL authenticates.
@@ -644,7 +644,7 @@ function ConnectTab({ user }: { user: UserItem }) {
             <div className="min-w-0 flex-1 space-y-1.5">
               {user.portal_urls.map((p) => (
                 <div key={p.host} className="flex items-center gap-2">
-                  <code className="block min-w-0 flex-1 break-all font-mono text-[11px] text-muted dark:text-muted-dark">
+                  <code className="text-muted dark:text-muted-dark block min-w-0 flex-1 font-mono text-[11px] break-all">
                     {p.portal}
                   </code>
                   <button
@@ -661,13 +661,13 @@ function ConnectTab({ user }: { user: UserItem }) {
             </div>
           </div>
           <details className="text-xs">
-            <summary className="cursor-pointer text-muted dark:text-muted-dark">
+            <summary className="text-muted dark:text-muted-dark cursor-pointer">
               Subscription URLs (for clients that import URLs directly)
             </summary>
             <div className="mt-2 space-y-1.5">
               {user.portal_urls.map((p) => (
                 <div key={p.host} className="flex items-center gap-2">
-                  <code className="block min-w-0 flex-1 break-all font-mono text-[11px] text-muted dark:text-muted-dark">
+                  <code className="text-muted dark:text-muted-dark block min-w-0 flex-1 font-mono text-[11px] break-all">
                     {p.sub}
                   </code>
                   <button
@@ -686,7 +686,7 @@ function ConnectTab({ user }: { user: UserItem }) {
         </div>
       )}
       {user.links.map((l) => (
-        <div key={l.name} className="rounded-lg border border-border p-3 dark:border-border-dark">
+        <div key={l.name} className="border-border dark:border-border-dark rounded-lg border p-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-semibold">{l.name}</span>
             <button
@@ -703,7 +703,7 @@ function ConnectTab({ user }: { user: UserItem }) {
             {qrs[l.name] && (
               <img src={qrs[l.name]} alt="" className="h-28 w-28 shrink-0 rounded bg-white p-1" />
             )}
-            <code className="block break-all font-mono text-[11px] text-muted dark:text-muted-dark">
+            <code className="text-muted dark:text-muted-dark block font-mono text-[11px] break-all">
               {l.url}
             </code>
           </div>
@@ -773,10 +773,10 @@ function ActivityTab({
         />
       </div>
       <LiveBandwidthChart email={user.email} />
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between gap-3 rounded-lg border p-3">
         <div>
           <div className="font-semibold">Drop active sessions</div>
-          <div className="mt-0.5 text-xs text-muted dark:text-muted-dark">
+          <div className="text-muted dark:text-muted-dark mt-0.5 text-xs">
             Kills established TCP sockets to this user's recent client IPs across all xray inbounds.
             Useful after changing a speed limit so the client reconnects through the new inbound.
           </div>
@@ -789,13 +789,13 @@ function ActivityTab({
           <Unplug size={14} /> Disconnect
         </button>
       </div>
-      <div className="rounded-lg border border-border dark:border-border-dark">
-        <div className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted dark:border-border-dark">
+      <div className="border-border dark:border-border-dark rounded-lg border">
+        <div className="border-border text-muted dark:border-border-dark border-b px-4 py-2 text-xs font-semibold tracking-wider uppercase">
           Client IPs
         </div>
         <div className="space-y-1 px-4 py-3">
           {(onlineEntry?.ips ?? []).length === 0 && (
-            <div className="text-xs text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark text-xs">
               No client IPs in the last 5 minutes.
             </div>
           )}
@@ -806,23 +806,23 @@ function ActivityTab({
           ))}
         </div>
       </div>
-      <div className="rounded-lg border border-border dark:border-border-dark">
-        <div className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted dark:border-border-dark">
+      <div className="border-border dark:border-border-dark rounded-lg border">
+        <div className="border-border text-muted dark:border-border-dark border-b px-4 py-2 text-xs font-semibold tracking-wider uppercase">
           Recent destinations
         </div>
         <div className="space-y-1 px-4 py-3">
           {(onlineEntry?.recent_destinations ?? []).length === 0 && (
-            <div className="text-xs text-muted dark:text-muted-dark">No recent traffic.</div>
+            <div className="text-muted dark:text-muted-dark text-xs">No recent traffic.</div>
           )}
           {(onlineEntry?.recent_destinations ?? []).map((d) => (
-            <div key={d} className="break-all font-mono text-xs">
+            <div key={d} className="font-mono text-xs break-all">
               {d}
             </div>
           ))}
         </div>
       </div>
       {onlineEntry?.last_seen ? (
-        <div className="text-xs text-muted dark:text-muted-dark">
+        <div className="text-muted dark:text-muted-dark text-xs">
           Last seen {formatTime(onlineEntry.last_seen)} ({relativeTime(onlineEntry.last_seen)})
         </div>
       ) : null}
@@ -955,7 +955,7 @@ function LimitsTab({
         <h3 className="mb-2 flex items-center gap-2 font-semibold">
           <HardDrive size={14} /> Total quota (lifetime)
         </h3>
-        <p className="mb-2 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-2 text-xs">
           Total bytes the user may consume before being auto-disabled. Leave empty for unlimited.
         </p>
         <div className="flex items-center gap-2">
@@ -968,18 +968,18 @@ function LimitsTab({
             value={quotaGB}
             onChange={(e) => setQuotaGB(e.target.value)}
           />
-          <span className="text-sm text-muted">GB</span>
+          <span className="text-muted text-sm">GB</span>
           <button className="btn btn-primary" onClick={saveQuota} disabled={pending}>
             Save
           </button>
         </div>
       </section>
 
-      <section className="border-t border-border pt-4 dark:border-border-dark">
+      <section className="border-border dark:border-border-dark border-t pt-4">
         <h3 className="mb-2 flex items-center gap-2 font-semibold">
           <HardDrive size={14} /> Periodic limits
         </h3>
-        <p className="mb-3 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-3 text-xs">
           Sub-caps under the total quota. Each rolls over independently on its own schedule. Empty /
           0 = no per-period cap.
         </p>
@@ -1026,11 +1026,11 @@ function LimitsTab({
         </div>
       </section>
 
-      <section className="border-t border-border pt-4 dark:border-border-dark">
+      <section className="border-border dark:border-border-dark border-t pt-4">
         <h3 className="mb-2 flex items-center gap-2 font-semibold">
           <Unplug size={14} /> Concurrent device limit
         </h3>
-        <p className="mb-2 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-2 text-xs">
           Maximum number of distinct client IPs allowed to be connected at the same time. Over-limit
           IPs are kicked oldest-first every minute. 0 = unlimited.
         </p>
@@ -1043,18 +1043,18 @@ function LimitsTab({
             value={maxSessions}
             onChange={(e) => setMaxSessions(e.target.value)}
           />
-          <span className="text-sm text-muted">devices</span>
+          <span className="text-muted text-sm">devices</span>
           <button className="btn btn-primary" onClick={saveMaxSessions} disabled={pending}>
             Save
           </button>
         </div>
       </section>
 
-      <section className="border-t border-border pt-4 dark:border-border-dark">
+      <section className="border-border dark:border-border-dark border-t pt-4">
         <h3 className="mb-2 flex items-center gap-2 font-semibold">
           <Gauge size={14} /> Speed limit (Bandwidth)
         </h3>
-        <p className="mb-2 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-2 text-xs">
           Per-user download/upload caps via tc. 0 = unlimited.
         </p>
         <div className="mb-2 grid grid-cols-2 gap-2">
@@ -1069,7 +1069,7 @@ function LimitsTab({
                 value={downloadMbps}
                 onChange={(e) => setDownloadMbps(e.target.value)}
               />
-              <span className="text-xs text-muted">Mbps</span>
+              <span className="text-muted text-xs">Mbps</span>
             </div>
           </label>
           <label className="block">
@@ -1083,7 +1083,7 @@ function LimitsTab({
                 value={uploadMbps}
                 onChange={(e) => setUploadMbps(e.target.value)}
               />
-              <span className="text-xs text-muted">Mbps</span>
+              <span className="text-muted text-xs">Mbps</span>
             </div>
           </label>
         </div>
@@ -1091,7 +1091,7 @@ function LimitsTab({
           Save
         </button>
         {user.bandwidth_port > 0 && (
-          <div className="mt-2 text-xs text-muted dark:text-muted-dark">
+          <div className="text-muted dark:text-muted-dark mt-2 text-xs">
             Bandwidth-limited inbound on port {user.bandwidth_port}
           </div>
         )}
@@ -1120,7 +1120,7 @@ function PeriodInput({
   note?: string;
 }) {
   return (
-    <div className="rounded-lg border border-border p-3 dark:border-border-dark">
+    <div className="border-border dark:border-border-dark rounded-lg border p-3">
       <div className="flex flex-wrap items-end gap-3">
         <label className="block min-w-[12rem] flex-1">
           <div className="kpi-label mb-1">{label} cap</div>
@@ -1134,12 +1134,12 @@ function PeriodInput({
               value={valueGB}
               onChange={(e) => onValueGB(e.target.value)}
             />
-            <span className="text-sm text-muted">GB</span>
+            <span className="text-muted text-sm">GB</span>
           </div>
         </label>
         {extra}
       </div>
-      <div className="mt-2 text-xs text-muted dark:text-muted-dark">
+      <div className="text-muted dark:text-muted-dark mt-2 text-xs">
         Used so far this period: <span className="font-mono">{bytes(usedBytes)}</span>
         {resetAt ? <> · next reset {relativeTime(resetAt)}</> : null}
         {note ? <> · {note}</> : null}
@@ -1180,7 +1180,7 @@ function RegenerateUUID({ user, onChanged }: { user: UserItem; onChanged: () => 
       <h3 className="mb-2 flex items-center gap-2 font-semibold">
         <RefreshCw size={14} /> Rotate UUID
       </h3>
-      <p className="mb-2 text-xs text-muted dark:text-muted-dark">
+      <p className="text-muted dark:text-muted-dark mb-2 text-xs">
         Generates a new VLESS UUID. Old clients will fail until they update.
       </p>
       <button className="btn" onClick={go} disabled={pending}>
@@ -1257,7 +1257,7 @@ function DangerTab({
         <h3 className="mb-2 flex items-center gap-2 font-semibold">
           <Pencil size={14} /> Enable / disable
         </h3>
-        <p className="mb-2 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-2 text-xs">
           Disabled users cannot connect. State persists across restarts.
         </p>
         <button className="btn" onClick={toggleEnabled}>
@@ -1269,7 +1269,7 @@ function DangerTab({
         <h3 className="mb-2 flex items-center gap-2 font-semibold">
           <Ban size={14} /> Temporary ban
         </h3>
-        <p className="mb-2 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-2 text-xs">
           Time-limited block — auto-lifts after duration.{" "}
           {banned ? `Currently banned ${relativeTime(user.banned_until!)}.` : ""}
         </p>
@@ -1281,7 +1281,7 @@ function DangerTab({
             value={banMin}
             onChange={(e) => setBanMin(e.target.value)}
           />
-          <span className="text-xs text-muted">minutes</span>
+          <span className="text-muted text-xs">minutes</span>
           <button className="btn btn-danger" onClick={ban}>
             Ban
           </button>
@@ -1293,11 +1293,11 @@ function DangerTab({
         </div>
       </section>
 
-      <section className="border-t border-border pt-4 dark:border-border-dark">
-        <h3 className="mb-2 flex items-center gap-2 font-semibold text-bad dark:text-bad-dark">
+      <section className="border-border dark:border-border-dark border-t pt-4">
+        <h3 className="text-bad dark:text-bad-dark mb-2 flex items-center gap-2 font-semibold">
           <Trash2 size={14} /> Delete user
         </h3>
-        <p className="mb-2 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-2 text-xs">
           Permanent. The connect links become invalid immediately.
         </p>
         <button className="btn btn-danger" onClick={remove}>
@@ -1337,7 +1337,7 @@ function AddUserDialog({ onClose }: { onClose: () => void }) {
         <h2 className="mb-3 flex items-center gap-2 text-base font-semibold">
           <KeyRound size={16} /> New user
         </h2>
-        <label className="mb-1 block text-xs text-muted dark:text-muted-dark">Email</label>
+        <label className="text-muted dark:text-muted-dark mb-1 block text-xs">Email</label>
         <input
           className="input mb-3"
           placeholder="user@panel"

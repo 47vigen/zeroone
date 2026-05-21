@@ -35,7 +35,7 @@ export default function KPICard({
       <div className="kpi-value mt-1">{value}</div>
       {hint && <div className="kpi-foot mt-1">{hint}</div>}
       {series && series.length > 1 && (
-        <div className="-mx-5 -mb-5 mt-3 h-12">
+        <div className="-mx-5 mt-3 -mb-5 h-12">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={series} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <defs>

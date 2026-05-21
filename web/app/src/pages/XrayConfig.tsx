@@ -63,9 +63,9 @@ export default function XrayConfig() {
 
       <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
         <section className="panel">
-          <div className="flex items-center justify-between border-b border-border px-4 py-2 dark:border-border-dark">
+          <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-4 py-2">
             <div className="text-sm font-medium">Generated xray.json</div>
-            <div className="text-xs text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark text-xs">
               {plan.isLoading
                 ? "checking plan…"
                 : changed
@@ -73,17 +73,17 @@ export default function XrayConfig() {
                   : "in sync with live"}
             </div>
           </div>
-          <div className="max-h-[60vh] overflow-auto bg-bg p-3 dark:bg-bg-dark">
+          <div className="bg-bg dark:bg-bg-dark max-h-[60vh] overflow-auto p-3">
             {generated.isLoading && (
-              <div className="text-sm text-muted dark:text-muted-dark">Loading…</div>
+              <div className="text-muted dark:text-muted-dark text-sm">Loading…</div>
             )}
             {generated.isError && (
-              <div className="text-sm text-bad dark:text-bad-dark">
+              <div className="text-bad dark:text-bad-dark text-sm">
                 Failed to load generated config.
               </div>
             )}
             {!generated.isLoading && !generated.isError && (
-              <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-snug">
+              <pre className="font-mono text-xs leading-snug break-all whitespace-pre-wrap">
                 {generatedText}
               </pre>
             )}
@@ -92,7 +92,7 @@ export default function XrayConfig() {
 
         <section className="space-y-4">
           <div className="panel">
-            <div className="border-b border-border px-4 py-2 dark:border-border-dark">
+            <div className="border-border dark:border-border-dark border-b px-4 py-2">
               <div className="text-sm font-medium">Apply status</div>
             </div>
             <div className="space-y-2 px-4 py-3 text-xs">
@@ -108,15 +108,15 @@ export default function XrayConfig() {
           </div>
 
           <div className="panel">
-            <div className="flex items-center justify-between border-b border-border px-4 py-2 dark:border-border-dark">
+            <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-4 py-2">
               <div className="text-sm font-medium">Recent snapshots</div>
-              <Link to="/snapshots" className="text-xs text-accent hover:underline">
+              <Link to="/snapshots" className="text-accent text-xs hover:underline">
                 View all →
               </Link>
             </div>
-            <div className="divide-y divide-border dark:divide-border-dark">
+            <div className="divide-border dark:divide-border-dark divide-y">
               {recent.length === 0 && (
-                <div className="px-4 py-3 text-xs text-muted dark:text-muted-dark">
+                <div className="text-muted dark:text-muted-dark px-4 py-3 text-xs">
                   No snapshots yet.
                 </div>
               )}

@@ -274,7 +274,7 @@ var tehranTZ = func() *time.Location {
 func formatTelegramMessage(ev events.Event) string {
 	t := time.Unix(ev.Time, 0).In(tehranTZ).Format("2006-01-02 15:04:05")
 	var sb strings.Builder
-	fmt.Fprintf(&sb, "*Xray Stack* — `%s`\n", ev.Kind)
+	fmt.Fprintf(&sb, "*ZeroOne* — `%s`\n", ev.Kind)
 	fmt.Fprintf(&sb, "_%s_\n", t)
 	for k, v := range ev.Data {
 		fmt.Fprintf(&sb, "• %s: `%v`\n", k, v)

@@ -55,11 +55,11 @@ export default function SnapshotTitleDialog({
           submit();
         }}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
           <div>
             <h2 className="font-semibold">{title}</h2>
             {description && (
-              <p className="text-xs text-muted dark:text-muted-dark">{description}</p>
+              <p className="text-muted dark:text-muted-dark text-xs">{description}</p>
             )}
           </div>
           <button type="button" onClick={onCancel} className="btn px-2">
@@ -67,7 +67,7 @@ export default function SnapshotTitleDialog({
           </button>
         </div>
         <div className="px-5 py-4">
-          <label className="block text-xs text-muted dark:text-muted-dark">Snapshot title</label>
+          <label className="text-muted dark:text-muted-dark block text-xs">Snapshot title</label>
           <input
             ref={inputRef}
             type="text"
@@ -77,12 +77,12 @@ export default function SnapshotTitleDialog({
             placeholder="e.g. Add CDN endpoint"
             maxLength={120}
           />
-          <p className="mt-2 text-xs text-muted dark:text-muted-dark">
+          <p className="text-muted dark:text-muted-dark mt-2 text-xs">
             A snapshot of stack.json + xray config will be saved under this title before the change
             is applied.
           </p>
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex items-center justify-end gap-2 border-t px-5 py-3">
           <button type="button" className="btn" onClick={onCancel}>
             Cancel
           </button>

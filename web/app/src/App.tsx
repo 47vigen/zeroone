@@ -41,7 +41,7 @@ function AuthGate() {
   // While the auth check is loading we show nothing rather than flashing
   // the login form on every reload of an already-authenticated session.
   if (me.isLoading) {
-    return <div className="grid min-h-full place-items-center text-xs text-muted">Loading…</div>;
+    return <div className="text-muted grid min-h-full place-items-center text-xs">Loading…</div>;
   }
   const data = me.data;
   const authed =
