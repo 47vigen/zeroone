@@ -117,15 +117,18 @@ export default function Snapshots() {
         confirmIcon={<RotateCcw size={14} />}
         pending={rollback.isPending}
         onCancel={() => setDialog(null)}
-        onConfirm={() => {
+        onConfirm={(value) => {
           if (dialog?.kind !== "rollback") return;
-          rollback.mutate(dialog.snapshot.id, {
-            onSuccess: () => {
-              toast.show("Rollback complete — restart zeroone to reload", "warn");
-              setDialog(null);
+          rollback.mutate(
+            { id: dialog.snapshot.id, title: value },
+            {
+              onSuccess: () => {
+                toast.show("Rollback complete — restart zeroone to reload", "warn");
+                setDialog(null);
+              },
+              onError: (e: any) => toast.show(`Rollback failed: ${e?.message ?? e}`, "bad"),
             },
-            onError: (e: any) => toast.show(`Rollback failed: ${e?.message ?? e}`, "bad"),
-          });
+          );
         }}
       />
     </>

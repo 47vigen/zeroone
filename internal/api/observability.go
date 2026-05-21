@@ -215,10 +215,30 @@ func (s *Server) snapshotsRollback(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, http.StatusBadRequest, fmt.Errorf("id query param required"))
 		return
 	}
+	// Validate the target exists before taking the pre-rollback snapshot —
+	// otherwise a typo'd id still churns the 50-entry auto-snapshot cap
+	// and prunes older useful auto snapshots even though no mutation ran.
+	if !s.snapshots.Has(id) {
+		s.fail(w, http.StatusNotFound, fmt.Errorf("snapshot not found: %s", id))
+		return
+	}
+	// Optional operator-supplied title for the pre-rollback snapshot.
+	// Same body shape as xrayApply so the panel uses one dialog component
+	// for both flows.
+	var body struct {
+		Title string `json:"title"`
+	}
+	if r.ContentLength > 0 {
+		_ = json.NewDecoder(r.Body).Decode(&body)
+	}
+	title := strings.TrimSpace(body.Title)
+	if title == "" {
+		title = fmt.Sprintf("Before rollback to %s", id)
+	}
 	// Capture the current state under an auto snapshot before the rollback
 	// overwrites it, so the operator can recover if the chosen target
 	// turns out to be wrong.
-	s.autoSnapshot(s.actor(r), "snapshot.rollback.pre", fmt.Sprintf("Before rollback to %s", id))
+	s.autoSnapshot(s.actor(r), "snapshot.rollback.pre", title)
 	if err := s.snapshots.Rollback(id, s.configPath, s.cfg.Server.XrayConfigPath); err != nil {
 		s.fail(w, http.StatusInternalServerError, err)
 		return

@@ -258,12 +258,16 @@ func (s *Server) tokenAuth(next http.Handler) http.Handler {
 				s.fail(w, http.StatusUnauthorized, fmt.Errorf("login required"))
 				return
 			}
-			// Bootstrap window: no admins on disk yet. Only allow the
-			// open path for callers on loopback, so a remote attacker
-			// who hits the panel during the install gap can't take it
-			// over. The installer runs `zeroone admin add` via
-			// `docker exec` against localhost, so it is unaffected.
-			if !isLoopbackRemote(r) {
+			// Bootstrap window: no admins on disk yet. Two narrow open
+			// paths so the panel UI's "Create the first admin" flow
+			// works from any remote browser without leaving the rest of
+			// the API exposed:
+			//   1. POST /api/admins — the create-first-admin call itself.
+			//   2. Loopback callers — so the installer's CLI seeding via
+			//      `docker exec` keeps working unchanged.
+			// Every other endpoint stays locked until an admin exists.
+			isCreateFirstAdmin := r.Method == http.MethodPost && r.URL.Path == "/api/admins"
+			if !isCreateFirstAdmin && !isLoopbackRemote(r) {
 				s.fail(w, http.StatusUnauthorized, fmt.Errorf("login required"))
 				return
 			}

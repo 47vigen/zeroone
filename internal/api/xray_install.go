@@ -2,6 +2,8 @@
 package api
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/amirrezakm/zeroone/internal/stack"
 	"github.com/amirrezakm/zeroone/internal/xrayinstall"
@@ -130,7 +133,10 @@ func (s *Server) xrayUpdateUpload(w http.ResponseWriter, r *http.Request) {
 	if uploadName == "" {
 		uploadName = "upload.zip"
 	}
-	stageDir := filepath.Join(s.xrayInstaller.Root, "tmp", "upload-"+uploadName)
+	// Per-request staging dir so two concurrent uploads of the same
+	// filename don't share a path. If the second request races to
+	// ErrJobInProgress, its cleanup must not touch the first job's zip.
+	stageDir := filepath.Join(s.xrayInstaller.Root, "tmp", "upload-"+newUploadID())
 	if err := os.MkdirAll(stageDir, 0o755); err != nil {
 		s.fail(w, http.StatusInternalServerError, err)
 		return
@@ -296,3 +302,14 @@ func xrayUpdateConfigView(c stack.XrayUpdateConfig) map[string]any {
 }
 
 const xrayUploadMaxBytes int64 = 200 << 20
+
+// newUploadID returns a short, unique staging-dir suffix. crypto/rand
+// is the primary source; the timestamp fallback keeps the call infallible
+// even if the OS entropy pool is unavailable.
+func newUploadID() string {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err == nil {
+		return hex.EncodeToString(b[:])
+	}
+	return fmt.Sprintf("%d", time.Now().UnixNano())
+}

@@ -88,6 +88,53 @@ func TestAuthGateReflectsAdminAddOnDisk(t *testing.T) {
 	}
 }
 
+// TestBootstrapAllowsRemoteAdminCreate covers the operator UX path
+// added alongside the loopback restriction: the React Login page POSTs
+// /api/admins from the operator's browser to seed the first admin. That
+// request must succeed from any origin while admins=0, then close once
+// the first admin exists, otherwise the advertised "Create the first
+// admin" flow is dead for any non-localhost deployment.
+func TestBootstrapAllowsRemoteAdminCreate(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "stack.json")
+	writeBootstrapConfig(t, configPath)
+
+	cfg, err := stack.Load(configPath)
+	if err != nil {
+		t.Fatalf("load bootstrap config: %v", err)
+	}
+	handler := NewServer(*cfg, configPath, true)
+
+	// 1. POST /api/admins from a remote browser during bootstrap: accepted.
+	body := strings.NewReader(`{"username":"alice","password":"correct-horse-staple"}`)
+	resp := do(handler, newReq(t, "POST", "/api/admins", "203.0.113.7:55555", "", body))
+	if resp.Code != http.StatusOK {
+		t.Fatalf("remote bootstrap POST /api/admins should succeed, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	// 2. Same request after an admin exists: the open path closes.
+	body = strings.NewReader(`{"username":"bob","password":"another-strong-passphrase"}`)
+	resp = do(handler, newReq(t, "POST", "/api/admins", "203.0.113.7:55556", "", body))
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("post-bootstrap remote POST /api/admins should require login, got %d body=%s", resp.Code, resp.Body.String())
+	}
+
+	// 3. Other endpoints stay locked during the bootstrap window for
+	//    remote callers — the open path is POST /api/admins only.
+	dir2 := t.TempDir()
+	cfg2Path := filepath.Join(dir2, "stack.json")
+	writeBootstrapConfig(t, cfg2Path)
+	cfg2, err := stack.Load(cfg2Path)
+	if err != nil {
+		t.Fatalf("load second bootstrap config: %v", err)
+	}
+	handler2 := NewServer(*cfg2, cfg2Path, true)
+	resp = do(handler2, newReq(t, "GET", "/api/users", "203.0.113.8:55557", "", nil))
+	if resp.Code != http.StatusUnauthorized {
+		t.Fatalf("non-/api/admins endpoint must stay locked during bootstrap from remote, got %d", resp.Code)
+	}
+}
+
 func TestIsLoopbackRemote(t *testing.T) {
 	cases := []struct {
 		addr string

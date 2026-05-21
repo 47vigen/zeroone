@@ -121,6 +121,20 @@ func (i *Installer) EnsureDirs() error {
 	return nil
 }
 
+// includeGeo reads the panel toggle `xray_update.include_geo` via
+// LoadConfig. Absent toggle and absent LoadConfig both default to true
+// so existing installs keep their geo-with-binary behaviour.
+func (i *Installer) includeGeo() bool {
+	if i.LoadConfig == nil {
+		return true
+	}
+	cfg := i.LoadConfig()
+	if cfg.XrayUpdate.IncludeGeo == nil {
+		return true
+	}
+	return *cfg.XrayUpdate.IncludeGeo
+}
+
 // EffectiveSources merges env defaults with the stack.XrayUpdate panel
 // overrides. Panel values win; missing fields fall back to env defaults;
 // finally to the hardcoded GitHub URLs.

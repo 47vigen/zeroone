@@ -109,6 +109,17 @@ func (s *Store) List() ([]Info, error) {
 	return out, nil
 }
 
+// Has reports whether a snapshot directory exists. Uses the same id
+// sanity check as Rollback so callers get a clean false (rather than a
+// path-escape) on malformed input.
+func (s *Store) Has(id string) bool {
+	if id == "" || strings.Contains(id, "/") || strings.Contains(id, "..") {
+		return false
+	}
+	info, err := os.Stat(filepath.Join(s.dir, id))
+	return err == nil && info.IsDir()
+}
+
 // Rollback overwrites stackDst with the snapshot's stack.json and
 // xrayDst with the snapshot's xray.json. The caller is responsible for
 // reloading services / re-running apply afterwards.
