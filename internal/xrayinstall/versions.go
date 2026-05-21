@@ -2,9 +2,18 @@
 package xrayinstall
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+// versionTokenRE is the single source of truth for what we will accept
+// as a filesystem-safe version token. The pattern intentionally
+// excludes path separators, `..`, and any non-printable bytes — and
+// is recognised by CodeQL's go/path-injection query as a sanitiser
+// when used via regexp.Regexp.MatchString at the path-construction
+// site (not just inside a helper).
+var versionTokenRE = regexp.MustCompile(`^[A-Za-z0-9._+\-]{1,64}$`)
 
 // ValidateVersionToken returns an error when v is unsafe to use as a
 // filesystem path component. The token is what gets joined into
@@ -13,24 +22,11 @@ import (
 // mirror returning a crafted release tag, or an admin upload labelled
 // `../../etc`, could write outside the override tree.
 func ValidateVersionToken(v string) error {
-	if v == "" {
+	if !versionTokenRE.MatchString(v) {
 		return errInvalidVersion
 	}
-	if len(v) > 64 {
+	if v == "." || v == ".." || strings.Contains(v, "..") {
 		return errInvalidVersion
-	}
-	if v == "." || v == ".." || strings.Contains(v, "/") || strings.Contains(v, `\`) || strings.Contains(v, "..") {
-		return errInvalidVersion
-	}
-	for _, c := range v {
-		switch {
-		case c >= '0' && c <= '9':
-		case c >= 'a' && c <= 'z':
-		case c >= 'A' && c <= 'Z':
-		case c == '.', c == '-', c == '_', c == '+':
-		default:
-			return errInvalidVersion
-		}
 	}
 	return nil
 }

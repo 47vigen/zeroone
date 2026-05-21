@@ -128,18 +128,17 @@ func (i *Installer) commitInstall(extracted extractedAssets, version, source, bi
 	if version == "" {
 		return fmt.Errorf("xrayinstall: cannot determine target version")
 	}
-	if err := ValidateVersionToken(version); err != nil {
-		return err
+	// Inline regex sanitiser at the path-construction site. CodeQL's
+	// go/path-injection query treats regexp.Regexp.MatchString as a
+	// sanitiser only when it appears on the taint path immediately
+	// before the join, so we re-check here even though
+	// ValidateVersionToken already did the same regex match upstream.
+	if !versionTokenRE.MatchString(version) || version == "." || version == ".." || strings.Contains(version, "..") {
+		return errInvalidVersion
 	}
 	prev, _ := i.LoadState()
 	versionsRoot := filepath.Join(i.Root, "versions")
 	versionDir := filepath.Join(versionsRoot, version)
-	// Belt-and-suspenders: the validator already restricts version to
-	// `[A-Za-z0-9._+-]+`, so this can only fire if the validator is
-	// bypassed. Keeps CodeQL's path-traversal analyzer happy.
-	if !strings.HasPrefix(filepath.Clean(versionDir)+string(os.PathSeparator), filepath.Clean(versionsRoot)+string(os.PathSeparator)) {
-		return fmt.Errorf("xrayinstall: refusing path %q outside versions root", versionDir)
-	}
 	if err := os.RemoveAll(versionDir); err != nil {
 		return err
 	}
