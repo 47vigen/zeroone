@@ -43,11 +43,11 @@ export default function RoutesPage() {
       <InboundTrafficPanel />
 
       <section className="panel mb-5">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
           <h2 className="text-sm font-semibold tracking-tight">SOCKS inbounds</h2>
-          <span className="text-xs text-muted dark:text-muted-dark">{socks.length} configured</span>
+          <span className="text-muted dark:text-muted-dark text-xs">{socks.length} configured</span>
         </div>
-        <div className="divide-y divide-border dark:divide-border-dark">
+        <div className="divide-border dark:divide-border-dark divide-y">
           {socks.map((s) => (
             <div
               key={s.name}
@@ -57,7 +57,7 @@ export default function RoutesPage() {
               <div className="font-mono text-xs">
                 {s.listen}:{s.port}
               </div>
-              <div className="text-xs text-muted dark:text-muted-dark">{s.username}</div>
+              <div className="text-muted dark:text-muted-dark text-xs">{s.username}</div>
               <div className="flex items-center gap-1">
                 <button
                   className="btn text-xs"
@@ -75,7 +75,7 @@ export default function RoutesPage() {
                 >
                   <Copy size={12} />
                 </button>
-                <span className="text-xs text-muted dark:text-muted-dark">
+                <span className="text-muted dark:text-muted-dark text-xs">
                   {s.links.length} links
                 </span>
               </div>
@@ -94,7 +94,7 @@ export default function RoutesPage() {
             </div>
           ))}
           {socks.length === 0 && (
-            <div className="px-5 py-6 text-sm text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark px-5 py-6 text-sm">
               No SOCKS inbounds. Click "New SOCKS" to create one.
             </div>
           )}
@@ -103,7 +103,7 @@ export default function RoutesPage() {
 
       <section className="grid gap-5 lg:grid-cols-2">
         <div className="panel">
-          <div className="border-b border-border px-5 py-3 dark:border-border-dark">
+          <div className="border-border dark:border-border-dark border-b px-5 py-3">
             <h2 className="text-sm font-semibold tracking-tight">Direct domains</h2>
           </div>
           <div className="max-h-72 space-y-1 overflow-auto px-5 py-3 font-mono text-xs">
@@ -111,14 +111,14 @@ export default function RoutesPage() {
               <div key={d}>{d}</div>
             ))}
             {(summary.data?.direct_domains ?? []).length === 0 && (
-              <div className="font-sans text-sm text-muted dark:text-muted-dark">
+              <div className="text-muted dark:text-muted-dark font-sans text-sm">
                 No direct rules.
               </div>
             )}
           </div>
         </div>
         <div className="panel">
-          <div className="border-b border-border px-5 py-3 dark:border-border-dark">
+          <div className="border-border dark:border-border-dark border-b px-5 py-3">
             <h2 className="text-sm font-semibold tracking-tight">Block rules</h2>
           </div>
           <div className="max-h-72 space-y-1 overflow-auto px-5 py-3 font-mono text-xs">
@@ -173,16 +173,16 @@ function InboundTrafficPanel() {
 
   return (
     <section className="panel mb-5">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <Network size={14} /> Inbound traffic split
         </h2>
-        <span className="text-xs text-muted dark:text-muted-dark">
+        <span className="text-muted dark:text-muted-dark text-xs">
           {rows.length} active · totals since Xray start
         </span>
       </div>
       {rows.length === 0 ? (
-        <div className="px-5 py-6 text-sm text-muted dark:text-muted-dark">
+        <div className="text-muted dark:text-muted-dark px-5 py-6 text-sm">
           No inbound traffic recorded yet.
         </div>
       ) : (
@@ -194,7 +194,7 @@ function InboundTrafficPanel() {
             <div title="Cumulative bytes from server to clients">↓ Downlink</div>
             <div title="Current rate (last 60s sample)">Rate now</div>
           </div>
-          <div className="divide-y divide-border dark:divide-border-dark">
+          <div className="divide-border dark:divide-border-dark divide-y">
             {rows.map((r) => (
               <div
                 key={r.tag}
@@ -205,14 +205,14 @@ function InboundTrafficPanel() {
                 </div>
                 <div className="font-medium">{bytes(r.total)}</div>
                 <div className="text-xs">
-                  <ArrowUp size={10} className="mr-1 inline text-muted" />
+                  <ArrowUp size={10} className="text-muted mr-1 inline" />
                   {bytes(r.uplink)}
                 </div>
                 <div className="text-xs">
-                  <ArrowDown size={10} className="mr-1 inline text-muted" />
+                  <ArrowDown size={10} className="text-muted mr-1 inline" />
                   {bytes(r.downlink)}
                 </div>
-                <div className="font-mono text-xs text-muted dark:text-muted-dark">
+                <div className="text-muted dark:text-muted-dark font-mono text-xs">
                   {r.downlinkBps + r.uplinkBps > 0 ? (
                     <>
                       ↓ {fmtBps(r.downlinkBps)} · ↑ {fmtBps(r.uplinkBps)}

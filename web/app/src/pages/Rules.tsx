@@ -95,7 +95,7 @@ export default function Rules() {
           <div>Source</div>
           <div></div>
         </div>
-        <div className="divide-y divide-border dark:divide-border-dark">
+        <div className="divide-border dark:divide-border-dark divide-y">
           {rows.map((r, i) => (
             <div
               key={i}
@@ -105,7 +105,7 @@ export default function Rules() {
                 <Globe size={12} className="text-muted" />
                 {r.kind}
               </div>
-              <code className="break-all font-mono text-xs">{r.matcher}</code>
+              <code className="font-mono text-xs break-all">{r.matcher}</code>
               <div>
                 <span
                   className={`pill ${r.action === "block" ? "pill-bad" : r.action === "direct" ? "pill-ok" : "text-muted"}`}
@@ -114,7 +114,7 @@ export default function Rules() {
                   {r.action}
                 </span>
               </div>
-              <div className="text-xs text-muted dark:text-muted-dark">{r.source}</div>
+              <div className="text-muted dark:text-muted-dark text-xs">{r.source}</div>
               <div className="flex justify-end">
                 {r.source === "manual" && r.action === "direct" && (
                   <button
@@ -238,7 +238,7 @@ function AddDirectDialog({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-1 text-base font-semibold">Add direct domain</h2>
-        <p className="mb-3 text-xs text-muted dark:text-muted-dark">
+        <p className="text-muted dark:text-muted-dark mb-3 text-xs">
           Traffic to this rule will go out via the local interface (eth0) instead of the proxy.
         </p>
 
@@ -281,7 +281,7 @@ function AddDirectDialog({ onClose }: { onClose: () => void }) {
         )}
 
         {cleaned && (
-          <div className="mb-3 text-xs text-muted dark:text-muted-dark">
+          <div className="text-muted dark:text-muted-dark mb-3 text-xs">
             Will save as{" "}
             <code className="text-foreground dark:text-foreground-dark font-mono">{finalRule}</code>
           </div>
@@ -329,8 +329,8 @@ function ScopeChoice({
           className={`h-2 w-2 rounded-full ${active ? "bg-ok dark:bg-ok-dark" : "bg-muted/40"}`}
         />
       </div>
-      <div className="mt-0.5 text-xs text-muted dark:text-muted-dark">{detail}</div>
-      <div className="mt-1 font-mono text-[11px] text-muted/80 dark:text-muted-dark/80">
+      <div className="text-muted dark:text-muted-dark mt-0.5 text-xs">{detail}</div>
+      <div className="text-muted/80 dark:text-muted-dark/80 mt-1 font-mono text-[11px]">
         {example}
       </div>
     </button>
