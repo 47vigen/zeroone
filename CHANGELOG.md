@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.0 — 2026-05-21
+
+### Features
+
+- xray runtime updates with mirror + offline upload (a3c4410)
+- titled snapshots + Xray Config panel page (30dfa31)
+
+### Bug Fixes
+
+- clean upload staging dir on success too (832ea88)
+- address Codex review findings from PRs #7–#9 (008f780)
+- use regexp sanitiser CodeQL recognises (67986bc)
+- lint findings + path-traversal hardening (449a575)
+- require login after install; close bootstrap-open hole (7c3963a)
+
 ## v0.1.0 — 2026-05-21
 
 ### ⚠ Breaking Changes
