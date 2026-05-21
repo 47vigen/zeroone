@@ -1,5 +1,45 @@
 # Changelog
 
+## v0.1.0 — 2026-05-21
+
+### ⚠ Breaking Changes
+
+- rebrand xray-stack/xray-stackd to zeroone (4c97ed9)
+
+### Features
+
+- add air-gapped install flow for Iranian deployments (fbbb3cb)
+- one-tap "Add to app" deeplinks in user portal (56a1726)
+- add ESLint + Prettier and format the whole tree (ec022ca)
+- automate semver releases on merge to main (17666d8)
+- let forks install from their own GHCR via ZEROONE_REPO (3359981)
+- dockerize + one-line installer + CI (6354edd)
+
+### Bug Fixes
+
+- handle deb822 apt sources; recover image tag from docker-load output (d3efd03)
+- pass --pull never to compose; mkdir before tar -C in docs (74f8994)
+- pin ZEROONE_VERSION from bundle; restore apt sources on failure (7dd09f8)
+- propagate close error from copyFile writer (de31444)
+- fall back to recursive copy on cross-device legacy state (1220150)
+- merge legacy state into pre-created /var/lib/zeroone (00303c7)
+- pin builder stages to $BUILDPLATFORM to avoid QEMU stalls (132e32e)
+- bump golangci-lint-action to v7 and Trivy to master (5f8d2fe)
+- copy CLI from disk path instead of $0 (86a4a48)
+- honor ZEROONE_ADMIN_LISTEN and ZEROONE_STATE_DIR for container template (4b6cc3b)
+- gofmt + race in xrayproc supervisor (6bd988f)
+
+### Documentation
+
+- add emojis and cross-links to install guides (9e3950b)
+- elevate offline install with Iran-specific rationale (8b75f69)
+- simplify with 3-step quick install + Advanced section (384bbee)
+
+### CI
+
+- publish prebuilt offline bundles as release assets (57adf31)
+- cover offline install scripts; fix two warnings (25d0e71)
+
 ## v1.1.0 — 2026-05-20
 
 ### Features
