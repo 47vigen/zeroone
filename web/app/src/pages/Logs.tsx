@@ -12,7 +12,7 @@ export default function Logs() {
     <>
       <PageHeader title="Logs" subtitle="Live Xray journal and panel audit log." />
       <div className="panel">
-        <div className="flex gap-1 border-b border-border px-3 py-2 dark:border-border-dark">
+        <div className="border-border dark:border-border-dark flex gap-1 border-b px-3 py-2">
           <TabButton
             active={tab === "xray"}
             onClick={() => setTab("xray")}
@@ -80,7 +80,7 @@ function XrayLogsTab() {
 
   return (
     <>
-      <div className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center gap-2 border-b px-4 py-2 text-xs">
         <Search size={12} className="text-muted" />
         <input
           className="input flex-1 border-0 bg-transparent px-0 focus:ring-0"
@@ -106,7 +106,7 @@ function XrayLogsTab() {
       <div
         ref={containerRef}
         onScroll={onScroll}
-        className="max-h-[60vh] overflow-auto whitespace-pre px-4 py-3 font-mono text-[11px] leading-relaxed"
+        className="max-h-[60vh] overflow-auto px-4 py-3 font-mono text-[11px] leading-relaxed whitespace-pre"
       >
         {lines.map((l, i) => (
           <div key={i} className={lineToneClass(l)}>
@@ -114,7 +114,7 @@ function XrayLogsTab() {
           </div>
         ))}
         {lines.length === 0 && (
-          <div className="py-6 text-center font-sans text-muted dark:text-muted-dark">
+          <div className="text-muted dark:text-muted-dark py-6 text-center font-sans">
             No matching log lines.
           </div>
         )}
@@ -141,16 +141,16 @@ function AuditTab() {
         <div>Actor</div>
         <div>Detail</div>
       </div>
-      <div className="max-h-[60vh] divide-y divide-border overflow-auto dark:divide-border-dark">
+      <div className="divide-border dark:divide-border-dark max-h-[60vh] divide-y overflow-auto">
         {entries.length === 0 && (
-          <div className="px-4 py-6 text-sm text-muted dark:text-muted-dark">No entries yet.</div>
+          <div className="text-muted dark:text-muted-dark px-4 py-6 text-sm">No entries yet.</div>
         )}
         {entries.map((e, i) => (
           <div
             key={i}
             className="grid grid-cols-[140px,1fr,160px,1fr] items-start gap-2 px-4 py-2 text-sm"
           >
-            <div className="whitespace-nowrap font-mono text-xs text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark font-mono text-xs whitespace-nowrap">
               {formatTime(e.t)}
             </div>
             <div>
@@ -161,7 +161,7 @@ function AuditTab() {
               {e.target && <span className="ml-2 font-mono text-xs">{e.target}</span>}
             </div>
             <div className="text-xs">{e.actor}</div>
-            <div className="break-all font-mono text-xs text-muted dark:text-muted-dark">
+            <div className="text-muted dark:text-muted-dark font-mono text-xs break-all">
               {e.data ? JSON.stringify(e.data) : ""}
             </div>
           </div>

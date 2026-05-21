@@ -16,7 +16,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ show }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex max-w-sm flex-col gap-2">
+      <div className="fixed right-4 bottom-4 z-50 flex max-w-sm flex-col gap-2">
         {items.map((t) => (
           <ToastView
             key={t.id}
@@ -43,7 +43,7 @@ function ToastView({ item, onDismiss }: { item: ToastItem; onDismiss: () => void
   return (
     <div
       className={clsx(
-        "flex items-center gap-2 rounded-lg border bg-panel px-3 py-2 text-sm shadow-elev transition-all dark:bg-panel-dark",
+        "bg-panel shadow-elev dark:bg-panel-dark flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-all",
         show ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
         item.tone === "ok" && "border-ok/30 text-ok dark:text-ok-dark",
         item.tone === "bad" && "border-bad/30 text-bad dark:text-bad-dark",

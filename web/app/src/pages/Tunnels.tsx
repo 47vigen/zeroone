@@ -64,10 +64,10 @@ export default function Tunnels() {
               : 0;
           return (
             <div key={t.name} className="panel">
-              <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border-dark">
+              <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-4">
                 <div>
                   <h3 className="text-sm font-semibold tracking-tight">{t.name}</h3>
-                  <p className="text-xs text-muted dark:text-muted-dark">
+                  <p className="text-muted dark:text-muted-dark text-xs">
                     {t.systemd_unit} · {t.interface} · priority {t.priority}
                   </p>
                 </div>
@@ -112,7 +112,7 @@ export default function Tunnels() {
                     >
                       {ifc.rx_dropped ?? 0} ↓ · {ifc.tx_dropped ?? 0} ↑
                       {txDropPct > 0.1 && (
-                        <span className="ml-1 text-muted">({txDropPct.toFixed(2)}%)</span>
+                        <span className="text-muted ml-1">({txDropPct.toFixed(2)}%)</span>
                       )}
                     </div>
                   </div>
@@ -131,7 +131,7 @@ export default function Tunnels() {
                     <YAxis fontSize={10} stroke="rgba(125,125,135,.7)" width={32} />
                     <Tooltip
                       labelFormatter={(v) => formatTimeShort(Number(v))}
-                      formatter={(v: number) => `${v} ms`}
+                      formatter={(v) => `${Number(v)} ms`}
                       contentStyle={{ borderRadius: 8 }}
                     />
                     <Line
@@ -147,7 +147,7 @@ export default function Tunnels() {
               </div>
               <ConnectivityTester tunnelName={t.name} interfaceName={t.interface} />
               {t.error && (
-                <div className="border-t border-border px-5 py-3 text-xs text-bad dark:border-border-dark dark:text-bad-dark">
+                <div className="border-border text-bad dark:border-border-dark dark:text-bad-dark border-t px-5 py-3 text-xs">
                   {t.error}
                 </div>
               )}
@@ -239,11 +239,11 @@ function FailoverModeCard() {
 
   return (
     <section className="panel mb-5">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <Settings2 size={14} /> Failover mode
         </h2>
-        <span className="text-xs text-muted dark:text-muted-dark">
+        <span className="text-muted dark:text-muted-dark text-xs">
           {effective ? (
             <>
               active:{" "}
@@ -272,7 +272,7 @@ function FailoverModeCard() {
             </button>
           ))}
         </div>
-        <p className="text-xs text-muted dark:text-muted-dark">{MODE_DESCRIPTIONS[mode]}</p>
+        <p className="text-muted dark:text-muted-dark text-xs">{MODE_DESCRIPTIONS[mode]}</p>
         {mode !== "auto" && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <label className="kpi-label" htmlFor="preferred-tunnel">
@@ -303,13 +303,13 @@ function FailoverModeCard() {
             {setMode.isPending ? (slowApply ? "Restarting xray…" : "Applying…") : "Apply"}
           </button>
           {dirty && !needsPreferred && (
-            <span className="text-xs text-muted dark:text-muted-dark">
+            <span className="text-muted dark:text-muted-dark text-xs">
               unsaved: {MODE_LABELS[mode]}
               {mode !== "auto" && preferred ? ` · ${preferred}` : ""}
             </span>
           )}
           {needsPreferred && (
-            <span className="text-xs text-warn dark:text-warn-dark">
+            <span className="text-warn dark:text-warn-dark text-xs">
               pick a tunnel to enable {MODE_LABELS[mode].toLowerCase()} mode
             </span>
           )}
@@ -324,21 +324,21 @@ function FailoverHistory() {
   const entries = (data?.entries ?? []).slice().reverse();
   return (
     <section className="panel mb-5">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3 dark:border-border-dark">
+      <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-5 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <History size={14} /> Failover history
         </h2>
-        <span className="text-xs text-muted dark:text-muted-dark">
+        <span className="text-muted dark:text-muted-dark text-xs">
           {entries.length} transition{entries.length === 1 ? "" : "s"} · last{" "}
           {data?.retention_hours ?? 48}h
         </span>
       </div>
       {entries.length === 0 ? (
-        <div className="px-5 py-6 text-sm text-muted dark:text-muted-dark">
+        <div className="text-muted dark:text-muted-dark px-5 py-6 text-sm">
           No transitions recorded — your tunnel hasn't flipped since the daemon started recording.
         </div>
       ) : (
-        <div className="max-h-72 divide-y divide-border overflow-auto dark:divide-border-dark">
+        <div className="divide-border dark:divide-border-dark max-h-72 divide-y overflow-auto">
           {entries.map((e, i) => (
             <FailoverHistoryRow key={`${e.t}-${i}`} entry={e} />
           ))}
@@ -368,20 +368,20 @@ function FailoverHistoryRow({ entry: e }: { entry: FailoverHistoryEntry }) {
       <div className="flex items-center gap-2 font-mono text-xs">
         {sameInterface ? (
           // Mode-only change (e.g. manual↔preferred on the same pinned tunnel) — show one label, no arrow.
-          <span className={failed ? "text-bad line-through dark:text-bad-dark" : ""}>
+          <span className={failed ? "text-bad dark:text-bad-dark line-through" : ""}>
             {toLabel}
           </span>
         ) : (
           <>
             <span>{fromLabel}</span>
-            <ArrowRight size={12} className="shrink-0 text-muted" />
+            <ArrowRight size={12} className="text-muted shrink-0" />
             <span className={failed ? "text-bad dark:text-bad-dark" : "text-ok dark:text-ok-dark"}>
               {toLabel}
             </span>
           </>
         )}
       </div>
-      <div className="truncate text-xs text-muted dark:text-muted-dark" title={e.error || e.reason}>
+      <div className="text-muted dark:text-muted-dark truncate text-xs" title={e.error || e.reason}>
         {failed ? (
           <span className="text-bad dark:text-bad-dark">
             {e.reason} — {e.error}
@@ -430,7 +430,7 @@ function ConnectivityTester({
   }
 
   return (
-    <div className="border-t border-border px-5 py-3 dark:border-border-dark">
+    <div className="border-border dark:border-border-dark border-t px-5 py-3">
       <div className="kpi-label mb-2 flex items-center gap-1.5">
         <Activity size={12} /> TCP probe
       </div>
@@ -452,7 +452,7 @@ function ConnectivityTester({
         </button>
       </div>
       {last && (
-        <div className="mt-2 break-all font-mono text-xs text-muted dark:text-muted-dark">
+        <div className="text-muted dark:text-muted-dark mt-2 font-mono text-xs break-all">
           {last}
         </div>
       )}
