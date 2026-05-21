@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.1 — 2026-05-21
+
+### Bug Fixes
+
+- clean upload staging dir on success too (832ea88)
+- address Codex review findings from PRs #7–#9 (008f780)
+
 ## v1.3.0 — 2026-05-21
 
 ### Features
