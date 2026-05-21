@@ -7,10 +7,7 @@ import { formatTime, relativeTime } from "../lib/format";
 import { Camera, RotateCcw } from "lucide-react";
 import type { SnapshotInfo } from "../api/types";
 
-type Dialog =
-  | { kind: "create" }
-  | { kind: "rollback"; snapshot: SnapshotInfo }
-  | null;
+type Dialog = { kind: "create" } | { kind: "rollback"; snapshot: SnapshotInfo } | null;
 
 export default function Snapshots() {
   const { data } = useSnapshots();
@@ -59,7 +56,9 @@ export default function Snapshots() {
                 <SourceBadge source={s.source} />
               </div>
               <div className="min-w-0">
-                <div className="truncate">{s.title || <em className="text-muted dark:text-muted-dark">untitled</em>}</div>
+                <div className="truncate">
+                  {s.title || <em className="text-muted dark:text-muted-dark">untitled</em>}
+                </div>
                 {s.action && (
                   <div className="truncate text-xs text-muted dark:text-muted-dark">{s.action}</div>
                 )}

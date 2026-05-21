@@ -4,12 +4,7 @@ import { Zap, RefreshCw } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import SnapshotTitleDialog from "../components/SnapshotTitleDialog";
 import { useToast } from "../components/Toast";
-import {
-  useApplyPlan,
-  useApplyXray,
-  useGeneratedXray,
-  useSnapshots,
-} from "../api/hooks";
+import { useApplyPlan, useApplyXray, useGeneratedXray, useSnapshots } from "../api/hooks";
 import { formatTime, relativeTime } from "../lib/format";
 
 // XrayConfig is the single hub for inspecting and re-applying the
@@ -133,9 +128,7 @@ export default function XrayConfig() {
                     </span>
                     <span
                       className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] ${
-                        s.source === "auto"
-                          ? "bg-warn/10 text-warn-dark"
-                          : "bg-ok/10 text-ok-dark"
+                        s.source === "auto" ? "bg-warn/10 text-warn-dark" : "bg-ok/10 text-ok-dark"
                       }`}
                     >
                       {s.source === "auto" ? "Auto" : "Manual"}
@@ -155,9 +148,7 @@ export default function XrayConfig() {
         open={dialogOpen}
         title="Apply Xray config"
         description="A snapshot is captured before the live Xray process is updated."
-        defaultValue={
-          changed ? "Apply pending stack changes" : "Re-apply current Xray config"
-        }
+        defaultValue={changed ? "Apply pending stack changes" : "Re-apply current Xray config"}
         confirmLabel="Apply"
         confirmIcon={<Zap size={14} />}
         pending={apply.isPending}

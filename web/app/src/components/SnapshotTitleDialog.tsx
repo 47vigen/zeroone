@@ -78,19 +78,15 @@ export default function SnapshotTitleDialog({
             maxLength={120}
           />
           <p className="mt-2 text-xs text-muted dark:text-muted-dark">
-            A snapshot of stack.json + xray config will be saved under this title before the
-            change is applied.
+            A snapshot of stack.json + xray config will be saved under this title before the change
+            is applied.
           </p>
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3 dark:border-border-dark">
           <button type="button" className="btn" onClick={onCancel}>
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={!trimmed || pending}
-          >
+          <button type="submit" className="btn btn-primary" disabled={!trimmed || pending}>
             {confirmIcon}
             {pending ? "Working…" : confirmLabel}
           </button>
