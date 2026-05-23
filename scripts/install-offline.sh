@@ -13,10 +13,10 @@
 #     sudo bash install-offline.sh
 #
 # After install, this script self-copies to /usr/local/bin/zeroone and
-# is invoked as `zeroone <subcommand>`. The `install` and `update`
-# subcommands of the online installer are replaced by an offline
-# `update -b BUNDLE_DIR` that loads a new image tar from a fresh
-# bundle.
+# is invoked as `zeroone <subcommand>`. Upgrades are offline too: SFTP a
+# fresh bundle to the server and run `zeroone update` — it auto-discovers
+# the newest zeroone-offline-*.tar.gz, verifies it, extracts it, and
+# loads the new image. `-a FILE` / `-b DIR` target a specific bundle.
 
 set -Eeuo pipefail
 
@@ -138,14 +138,6 @@ host_bundle_arch() {
         aarch64|arm64) printf 'arm64' ;;
         *) printf '' ;;
     esac
-}
-
-sha256_of() {
-    if command -v sha256sum >/dev/null 2>&1; then
-        sha256sum "$1" | awk '{print $1}'
-    else
-        shasum -a 256 "$1" | awk '{print $1}'
-    fi
 }
 
 # Auto-discover an uploaded bundle archive. Scans common landing spots for
@@ -534,7 +526,7 @@ cmd_install() {
 
     if [ -f "${COMPOSE_FILE}" ] && [ "${force}" -ne 1 ]; then
         warn "already installed at ${COMPOSE_FILE}"
-        warn "to upgrade with a fresh offline bundle: zeroone update -b BUNDLE_DIR"
+        warn "to upgrade: SFTP a fresh bundle to the server, then run: zeroone update"
         warn "to wipe and reinstall: zeroone uninstall --purge && bash install-offline.sh"
         exit 0
     fi
