@@ -131,6 +131,116 @@ find_bundle() {
     die "could not locate bundle. Expected zeroone-image*.tar + docker-compose.yml + .env.example in one of: ${candidates[*]}. Pass --bundle DIR to point at the extracted bundle directory."
 }
 
+# Map `uname -m` to the bundle's arch suffix (amd64 / arm64).
+host_bundle_arch() {
+    case "$(uname -m)" in
+        x86_64|amd64) printf 'amd64' ;;
+        aarch64|arm64) printf 'arm64' ;;
+        *) printf '' ;;
+    esac
+}
+
+sha256_of() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    else
+        shasum -a 256 "$1" | awk '{print $1}'
+    fi
+}
+
+# Auto-discover an uploaded bundle archive. Scans common landing spots for
+# zeroone-offline-*.tar.gz, skips archives built for the wrong CPU arch,
+# and picks the newest by mtime. Sets BUNDLE_ARCHIVE.
+find_bundle_archive() {
+    local arch
+    arch=$(host_bundle_arch)
+
+    # Candidate directories, de-duped while preserving order.
+    local raw=("${PWD}" /root "${HOME:-}" /tmp "${INSTALL_DIR}" "${DATA_DIR}")
+    local dirs=() seen=" " d
+    for d in "${raw[@]}"; do
+        [ -n "${d}" ] || continue
+        case "${seen}" in *" ${d} "*) continue ;; esac
+        seen="${seen}${d} "
+        dirs+=("${d}")
+    done
+
+    local best="" best_mtime=0 cand mt arch_suffix
+    for d in "${dirs[@]}"; do
+        [ -d "${d}" ] || continue
+        for cand in "${d}"/zeroone-offline-*.tar.gz; do
+            [ -f "${cand}" ] || continue
+            # Skip wrong-arch bundles when we can tell the host arch and
+            # the filename carries an -<arch>.tar.gz suffix.
+            if [ -n "${arch}" ]; then
+                arch_suffix=${cand%.tar.gz}
+                arch_suffix=${arch_suffix##*-}
+                case "${arch_suffix}" in
+                    amd64|arm64)
+                        [ "${arch_suffix}" = "${arch}" ] || continue ;;
+                esac
+            fi
+            mt=$(stat -c %Y "${cand}" 2>/dev/null || stat -f %m "${cand}" 2>/dev/null || echo 0)
+            if [ "${mt}" -ge "${best_mtime}" ]; then
+                best_mtime=${mt}
+                best=${cand}
+            fi
+        done
+    done
+
+    if [ -z "${best}" ]; then
+        die "no bundle archive found. Looked for zeroone-offline-*.tar.gz${arch:+ (arch ${arch})} in: ${dirs[*]}. Upload the bundle via SFTP and re-run, or point at it explicitly: zeroone update -a /path/to/bundle.tar.gz (or -b EXTRACTED_DIR)."
+    fi
+    BUNDLE_ARCHIVE=${best}
+    log "found bundle archive: ${BUNDLE_ARCHIVE}"
+}
+
+# Verify a bundle archive against its .sha256 sidecar when present.
+# Aborts on mismatch; warns and proceeds when the sidecar is absent.
+verify_archive_checksum() {
+    local archive=$1
+    local sidecar="${archive}.sha256"
+    if [ ! -f "${sidecar}" ]; then
+        warn "no checksum sidecar ($(basename "${sidecar}")); skipping integrity check"
+        return 0
+    fi
+    log "verifying checksum against $(basename "${sidecar}")"
+    local dir base
+    dir=$(dirname "${archive}")
+    base=$(basename "${sidecar}")
+    if command -v sha256sum >/dev/null 2>&1; then
+        ( cd "${dir}" && sha256sum -c "${base}" >/dev/null ) \
+            || die "checksum mismatch for $(basename "${archive}"). The transfer may be corrupted — re-upload and retry."
+    else
+        # shasum -c reads the same "<hash>  <name>" format.
+        ( cd "${dir}" && shasum -a 256 -c "${base}" >/dev/null ) \
+            || die "checksum mismatch for $(basename "${archive}"). The transfer may be corrupted — re-upload and retry."
+    fi
+    ok "checksum verified"
+}
+
+# Extract a bundle archive into a fresh temp dir; sets EXTRACT_DIR.
+# Registers an EXIT cleanup so the temp dir is removed when the script
+# exits. Prefers a temp dir under DATA_DIR (same filesystem as the
+# Docker volume) and falls back to the default TMPDIR.
+EXTRACT_DIR=""
+_cleanup_extract_tmp() {
+    [ -n "${EXTRACT_DIR}" ] && rm -rf "${EXTRACT_DIR}" 2>/dev/null || true
+}
+extract_archive() {
+    local archive=$1
+    local tmp
+    if [ -d "${DATA_DIR}" ] && [ -w "${DATA_DIR}" ]; then
+        tmp=$(mktemp -d "${DATA_DIR}/.update.XXXXXX")
+    else
+        tmp=$(mktemp -d)
+    fi
+    EXTRACT_DIR=${tmp}
+    trap _cleanup_extract_tmp EXIT
+    log "extracting $(basename "${archive}")"
+    tar -xzf "${archive}" -C "${tmp}"
+}
+
 ensure_docker_via_runflare_mirror() {
     [ "${ZEROONE_SKIP_DOCKER_INSTALL:-0}" = "1" ] && \
         die "docker is missing and ZEROONE_SKIP_DOCKER_INSTALL=1 set. Install docker manually and re-run."
@@ -289,8 +399,8 @@ print_summary() {
     printf '   state:     %s\n' "${DATA_DIR}"
     printf '   cli:       %s\n' "${CLI_PATH}"
     printf '\nTry: zeroone status\n'
-    printf 'For upgrades, build a fresh bundle on the connected host and run:\n'
-    printf '   zeroone update -b /path/to/extracted/bundle\n\n'
+    printf 'For upgrades, SFTP a fresh zeroone-offline-*.tar.gz to the server and run:\n'
+    printf '   sudo zeroone update\n\n'
 }
 
 prompt_admin() {
@@ -499,14 +609,35 @@ cmd_update() {
     require_root
     [ -f "${COMPOSE_FILE}" ] || die "not installed (no ${COMPOSE_FILE}). Run install-offline.sh first."
 
-    local bundle_dir=""
+    local bundle_dir="" archive=""
     while [ $# -gt 0 ]; do
         case "$1" in
-            -b|--bundle) bundle_dir=$2; shift 2 ;;
-            *) die "unknown flag for update: $1. Offline update requires -b BUNDLE_DIR." ;;
+            -b|--bundle)  bundle_dir=$2; shift 2 ;;
+            -a|--archive) archive=$2; shift 2 ;;
+            -*) die "unknown flag for update: $1. Usage: zeroone update [FILE|-a FILE|-b DIR]" ;;
+            *)
+                # Bare positional: treat a *.tar.gz as an archive path.
+                case "$1" in
+                    *.tar.gz) archive=$1; shift ;;
+                    *) die "unexpected argument: $1. Usage: zeroone update [FILE|-a FILE|-b DIR]" ;;
+                esac
+                ;;
         esac
     done
-    [ -n "${bundle_dir}" ] || die "offline update requires a fresh bundle: zeroone update -b /path/to/extracted/bundle"
+
+    # Resolution order: an already-extracted -b DIR wins and skips
+    # extraction. Otherwise resolve an archive (explicit or
+    # auto-discovered), verify it, and extract into a temp dir.
+    if [ -z "${bundle_dir}" ]; then
+        if [ -z "${archive}" ]; then
+            find_bundle_archive
+            archive=${BUNDLE_ARCHIVE}
+        fi
+        [ -f "${archive}" ] || die "bundle archive not found: ${archive}"
+        verify_archive_checksum "${archive}"
+        extract_archive "${archive}"
+        bundle_dir=${EXTRACT_DIR}
+    fi
 
     find_bundle "${bundle_dir}"
     log "using bundle: ${BUNDLE_DIR}"
@@ -514,8 +645,12 @@ cmd_update() {
     log "refreshing docker-compose.yml from bundle"
     cp "${BUNDLE_DIR}/docker-compose.yml" "${COMPOSE_FILE}"
 
-    log "self-updating CLI"
-    install -m 0755 "${BUNDLE_DIR}/install-offline.sh" "${CLI_PATH}"
+    if [ -f "${BUNDLE_DIR}/install-offline.sh" ]; then
+        log "self-updating CLI"
+        install -m 0755 "${BUNDLE_DIR}/install-offline.sh" "${CLI_PATH}"
+    else
+        warn "bundle has no install-offline.sh; leaving CLI at ${CLI_PATH} unchanged"
+    fi
 
     load_image "${BUNDLE_IMAGE_TAR}"
     pin_image_from_tar "${BUNDLE_IMAGE_TAR}"
@@ -638,7 +773,9 @@ usage: zeroone <subcommand> [args...]
 
 install subcommands (run from the extracted bundle directory):
   install [-b DIR] [-f]         load image, write compose+env, start container
-  update  -b DIR                load a new image tar, restart container
+  update  [FILE|-a FILE|-b DIR] find/extract a bundle (auto-discovers the
+                                newest zeroone-offline-*.tar.gz if omitted),
+                                load its image, restart container
 
 operational subcommands (after install):
   up                            start container
