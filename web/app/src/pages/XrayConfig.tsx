@@ -63,17 +63,23 @@ export default function XrayConfig() {
   const editorTheme = dark ? githubDark : githubLight;
 
   // Edit mode targets the live xray.json, so seed the buffer from the actual
-  // on-disk config — not the stack render, which may have drifted.
+  // on-disk config — not the stack render, which may have drifted. TanStack
+  // Query's refetch resolves with an error state instead of throwing, so we
+  // inspect the result and abort (staying in view mode) on failure rather than
+  // falling back to the rendered config and risking a clobbering apply.
   async function enterEditMode() {
     setEnteringEdit(true);
     try {
       const res = await live.refetch();
-      const seed = res.data ? JSON.stringify(res.data, null, 2) : generatedText;
+      if (res.error || res.data == null) {
+        const msg = (res.error as any)?.message ?? "live config unavailable";
+        toast.show(`Failed to load live config: ${msg}`, "bad");
+        return;
+      }
+      const seed = JSON.stringify(res.data, null, 2);
       setLiveBaseline(seed);
       setEditValue(seed);
       setEditMode(true);
-    } catch (e: any) {
-      toast.show(`Failed to load live config: ${e?.message ?? e}`, "bad");
     } finally {
       setEnteringEdit(false);
     }
