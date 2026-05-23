@@ -92,7 +92,9 @@ export default function XrayConfig() {
             <button
               className="btn"
               onClick={() => setEditMode((v) => !v)}
-              title={editMode ? "Switch back to read-only view" : "Edit the live xray.json directly"}
+              title={
+                editMode ? "Switch back to read-only view" : "Edit the live xray.json directly"
+              }
             >
               {editMode ? <Eye size={14} /> : <Pencil size={14} />}
               {editMode ? "View" : "Edit"}
@@ -169,7 +171,7 @@ export default function XrayConfig() {
           </div>
 
           {editMode && (
-            <div className="border-border dark:border-border-dark text-warn-dark flex items-start gap-2 border-b bg-warn/5 px-4 py-2 text-xs">
+            <div className="border-border dark:border-border-dark text-warn-dark bg-warn/5 flex items-start gap-2 border-b px-4 py-2 text-xs">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <span>
                 Editing writes directly to the live xray.json. The daemon regenerates it from
