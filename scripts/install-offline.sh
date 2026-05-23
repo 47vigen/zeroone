@@ -404,7 +404,7 @@ prompt_admin() {
         return
     fi
     if [ ! -t 0 ]; then
-        die "interactive admin prompt requires a TTY. Either rerun with stdin attached, or export ZEROONE_ADMIN_USERNAME / ZEROONE_ADMIN_PASSWORD before installing."
+        die "interactive admin prompt requires a TTY. Either rerun with stdin attached, or export ZEROONE_ADMIN_USERNAME / ZEROONE_ADMIN_PASSWORD before installing. (You can also skip and add an admin later: zeroone cli admin add ...)"
     fi
     printf '\n--- create panel admin ---\n'
     local pass2
@@ -765,11 +765,13 @@ zeroone (offline) — air-gapped control panel installer for Xray-core
 
 usage: zeroone <subcommand> [args...]
 
-install subcommands (run from the extracted bundle directory):
+bundle subcommands:
   install [-b DIR] [-f]         load image, write compose+env, start container
-  update  [FILE|-a FILE|-b DIR] find/extract a bundle (auto-discovers the
-                                newest zeroone-offline-*.tar.gz if omitted),
-                                load its image, restart container
+                                (run from the extracted bundle dir, or pass -b DIR)
+  update  [FILE|-a FILE|-b DIR] upgrade from a fresh bundle. With no args,
+                                auto-discovers the newest uploaded
+                                zeroone-offline-*.tar.gz, verifies its
+                                .sha256, extracts it, and loads the image
 
 operational subcommands (after install):
   up                            start container
