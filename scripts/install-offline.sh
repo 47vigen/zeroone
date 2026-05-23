@@ -225,7 +225,9 @@ verify_archive_checksum() {
 # Docker volume) and falls back to the default TMPDIR.
 EXTRACT_DIR=""
 _cleanup_extract_tmp() {
-    [ -n "${EXTRACT_DIR}" ] && rm -rf "${EXTRACT_DIR}" 2>/dev/null || true
+    if [ -n "${EXTRACT_DIR}" ]; then
+        rm -rf "${EXTRACT_DIR}" 2>/dev/null || true
+    fi
 }
 extract_archive() {
     local archive=$1
