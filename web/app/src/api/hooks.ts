@@ -188,12 +188,12 @@ export function useGeneratedXray() {
 }
 
 export function useLiveXray() {
+  // Reads the actual on-disk live xray.json. Disabled by default and fetched
+  // on demand (via refetch) so the editor seeds its buffer from the real apply
+  // target rather than the stack-rendered config, which may have drifted.
   return useQuery({
     queryKey: ["live-xray"],
-    queryFn: async () => {
-      // Live config is not exposed directly; we use apply-plan to compare and fall back to generated
-      return null as any;
-    },
+    queryFn: () => api<any>("/api/xray/live"),
     enabled: false,
   });
 }

@@ -12,6 +12,7 @@ import {
   useApplyRawXray,
   useApplyXray,
   useGeneratedXray,
+  useLiveXray,
   useSnapshots,
 } from "../api/hooks";
 import { useDarkMode } from "../lib/useDarkMode";
@@ -25,6 +26,7 @@ import { formatTime, relativeTime } from "../lib/format";
 // regenerates xray.json from stack.json and overwrites the edit.
 export default function XrayConfig() {
   const generated = useGeneratedXray();
+  const live = useLiveXray();
   const plan = useApplyPlan();
   const snapshots = useSnapshots();
   const apply = useApplyXray();
@@ -35,13 +37,18 @@ export default function XrayConfig() {
   const [rawDialogOpen, setRawDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editValue, setEditValue] = useState("");
+  // Snapshot of the live config the edit buffer was seeded from. Dirty/Revert
+  // compare against this, never against the stack-rendered config, so applying
+  // an edit can't silently clobber live-only drift.
+  const [liveBaseline, setLiveBaseline] = useState("");
+  const [enteringEdit, setEnteringEdit] = useState(false);
 
   const generatedText = useMemo(
     () => (generated.data ? JSON.stringify(generated.data, null, 2) : ""),
     [generated.data],
   );
 
-  // While not editing, keep the buffer in sync with the live render (which
+  // In view mode the editor mirrors the daemon-rendered config (which
   // auto-refetches). In edit mode we leave the buffer alone so a background
   // refetch never clobbers in-progress edits.
   useEffect(() => {
@@ -50,10 +57,27 @@ export default function XrayConfig() {
 
   const allowApply = plan.data?.allow_apply ?? false;
   const changed = plan.data?.changed ?? false;
-  const dirty = editMode && editValue !== generatedText;
+  const dirty = editMode && editValue !== liveBaseline;
   const recent = (snapshots.data?.snapshots ?? []).slice(0, 5);
 
   const editorTheme = dark ? githubDark : githubLight;
+
+  // Edit mode targets the live xray.json, so seed the buffer from the actual
+  // on-disk config — not the stack render, which may have drifted.
+  async function enterEditMode() {
+    setEnteringEdit(true);
+    try {
+      const res = await live.refetch();
+      const seed = res.data ? JSON.stringify(res.data, null, 2) : generatedText;
+      setLiveBaseline(seed);
+      setEditValue(seed);
+      setEditMode(true);
+    } catch (e: any) {
+      toast.show(`Failed to load live config: ${e?.message ?? e}`, "bad");
+    } finally {
+      setEnteringEdit(false);
+    }
+  }
 
   function format() {
     try {
@@ -91,7 +115,8 @@ export default function XrayConfig() {
             </button>
             <button
               className="btn"
-              onClick={() => setEditMode((v) => !v)}
+              disabled={enteringEdit}
+              onClick={() => (editMode ? setEditMode(false) : enterEditMode())}
               title={
                 editMode ? "Switch back to read-only view" : "Edit the live xray.json directly"
               }
@@ -136,7 +161,7 @@ export default function XrayConfig() {
         <section className="panel">
           <div className="border-border dark:border-border-dark flex items-center justify-between border-b px-4 py-2">
             <div className="text-sm font-medium">
-              {editMode ? "Edit xray.json" : "Generated xray.json"}
+              {editMode ? "Edit live xray.json" : "Generated xray.json"}
             </div>
             <div className="flex items-center gap-3">
               {editMode && (
@@ -150,9 +175,9 @@ export default function XrayConfig() {
                   </button>
                   <button
                     className="text-muted dark:text-muted-dark inline-flex items-center gap-1 text-xs hover:underline disabled:opacity-50"
-                    onClick={() => setEditValue(generatedText)}
+                    onClick={() => setEditValue(liveBaseline)}
                     disabled={!dirty}
-                    title="Discard edits and reload the rendered config"
+                    title="Discard edits and reload the live config"
                   >
                     <Undo2 size={12} /> Revert
                   </button>
