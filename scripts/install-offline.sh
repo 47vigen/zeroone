@@ -140,6 +140,15 @@ host_bundle_arch() {
     esac
 }
 
+# Compute the SHA-256 of a file, printing just the hex digest.
+sha256_of() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    else
+        shasum -a 256 "$1" | awk '{print $1}'
+    fi
+}
+
 # Auto-discover an uploaded bundle archive. Scans common landing spots for
 # zeroone-offline-*.tar.gz, skips archives built for the wrong CPU arch,
 # and picks the newest by mtime. Sets BUNDLE_ARCHIVE.
@@ -188,6 +197,9 @@ find_bundle_archive() {
 }
 
 # Verify a bundle archive against its .sha256 sidecar when present.
+# Compares the digest directly (not via `sha256sum -c`) so a renamed
+# tarball still verifies — the sidecar embeds the original bundle name,
+# which would otherwise make the check fail after an SFTP rename.
 # Aborts on mismatch; warns and proceeds when the sidecar is absent.
 verify_archive_checksum() {
     local archive=$1
@@ -197,16 +209,12 @@ verify_archive_checksum() {
         return 0
     fi
     log "verifying checksum against $(basename "${sidecar}")"
-    local dir base
-    dir=$(dirname "${archive}")
-    base=$(basename "${sidecar}")
-    if command -v sha256sum >/dev/null 2>&1; then
-        ( cd "${dir}" && sha256sum -c "${base}" >/dev/null ) \
-            || die "checksum mismatch for $(basename "${archive}"). The transfer may be corrupted — re-upload and retry."
-    else
-        # shasum -c reads the same "<hash>  <name>" format.
-        ( cd "${dir}" && shasum -a 256 -c "${base}" >/dev/null ) \
-            || die "checksum mismatch for $(basename "${archive}"). The transfer may be corrupted — re-upload and retry."
+    local expected actual
+    expected=$(awk 'NF{print $1; exit}' "${sidecar}")
+    [ -n "${expected}" ] || die "checksum sidecar $(basename "${sidecar}") is empty or malformed."
+    actual=$(sha256_of "${archive}")
+    if [ "${expected}" != "${actual}" ]; then
+        die "checksum mismatch for $(basename "${archive}") (expected ${expected}, got ${actual}). The transfer may be corrupted — re-upload and retry."
     fi
     ok "checksum verified"
 }
