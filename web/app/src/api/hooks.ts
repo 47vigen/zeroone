@@ -132,6 +132,21 @@ export function useApplyXray() {
   });
 }
 
+export function useApplyRawXray() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ config, title }: { config: unknown; title: string }) =>
+      put("/api/xray/live", { config, title }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["apply-plan"] });
+      qc.invalidateQueries({ queryKey: ["generated-xray"] });
+      qc.invalidateQueries({ queryKey: ["summary"] });
+      qc.invalidateQueries({ queryKey: ["snapshots"] });
+      qc.invalidateQueries({ queryKey: ["audit"] });
+    },
+  });
+}
+
 export function useSyncUsage() {
   const qc = useQueryClient();
   return useMutation({
